@@ -1,0 +1,295 @@
+<style>
+  :root{
+    --ground:#0d1220; --panel:#161d2b; --panel2:#1b2437; --row:#141b29;
+    --border:#263145; --border2:#324063;
+    --text:#e8edf7; --muted:#8b98b0; --faint:#5d6a83;
+    --accent:#57b6ff;
+    --gold:#f4c05a; --green:#46c26b; --amber:#e0a53a; --red:#e5686a;
+    --mix:#f4c05a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 20px 64px}
+
+  /* header */
+  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#111827,#0d1220);
+    position:sticky;top:0;z-index:20;backdrop-filter:blur(6px)}
+  .hd{max-width:1040px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;
+    justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .brand h1{font-size:19px;letter-spacing:-.02em;margin:0;font-weight:750}
+  .brand .accent{color:var(--accent)}
+  .brand .tag{font-size:12.5px;color:var(--muted)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{display:flex;flex-direction:column;align-items:flex-end;padding:6px 11px;border:1px solid var(--border);
+    border-radius:8px;background:var(--panel)}
+  .chip b{font-size:15px;font-weight:700}
+  .chip span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+  /* toggle */
+  .toggle{display:flex;gap:4px;margin:22px 0 18px;background:var(--panel);border:1px solid var(--border);
+    border-radius:10px;padding:4px;width:fit-content}
+  .toggle button{appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;
+    font-size:13.5px;font-weight:600;padding:8px 16px;border-radius:7px;cursor:pointer;transition:.15s}
+  .toggle button[aria-selected="true"]{background:var(--panel2);color:var(--text);box-shadow:inset 0 0 0 1px var(--border2)}
+  .toggle button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* domain pills */
+  .pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .pill{appearance:none;border:1px solid var(--border);background:var(--panel);color:var(--muted);
+    font:inherit;font-size:13px;font-weight:600;padding:7px 13px;border-radius:20px;cursor:pointer;
+    display:flex;align-items:center;gap:7px;transition:.15s}
+  .pill[aria-selected="true"]{border-color:var(--accent);color:var(--text);
+    box-shadow:0 0 0 1px var(--accent),0 0 18px -6px var(--accent)}
+  .pill:disabled{opacity:.5;cursor:not-allowed}
+  .pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .dot.live{background:var(--green)} .dot.soon{background:var(--amber)} .dot.gap{background:var(--faint)}
+
+  /* benchmark meta */
+  .bmeta{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding:14px 16px;border:1px solid var(--border);border-radius:11px 11px 0 0;background:var(--panel);
+    border-bottom:0}
+  .bmeta .l h2{margin:0 0 2px;font-size:15.5px;letter-spacing:-.01em}
+  .bmeta .l p{margin:0;font-size:12.5px;color:var(--muted)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+  .legend b{color:var(--text);font-weight:600}
+
+  /* table */
+  .tblwrap{overflow-x:auto;border:1px solid var(--border);border-radius:0 0 11px 11px;background:var(--panel)}
+  table{width:100%;border-collapse:collapse;min-width:620px}
+  thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);
+    font-weight:600;text-align:right;padding:11px 14px;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0}
+  thead th.l{text-align:left}
+  tbody td{padding:12px 14px;border-bottom:1px solid #1c2436;text-align:right;font-size:13.5px}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover td{background:var(--row)}
+  td.rank{color:var(--faint);width:44px;text-align:center;font-size:13px}
+  tr.top td.rank{color:var(--gold);font-weight:700}
+  td.model{text-align:left;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+  .badge{display:inline-block;margin-left:8px;font-size:10px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.05em;padding:2px 7px;border-radius:5px;vertical-align:middle}
+  .badge.open{color:#9ad0ff;background:rgba(87,182,255,.13);border:1px solid rgba(87,182,255,.3)}
+  .badge.closed{color:var(--muted);background:#1d2436;border:1px solid var(--border)}
+  .badge.mix{color:#1a1408;background:var(--gold);border:1px solid var(--gold)}
+  tr.mixrow td{background:rgba(244,192,90,.06)}
+  tr.mixrow{box-shadow:inset 3px 0 0 var(--gold)}
+
+  /* score bar */
+  .barcell{display:flex;align-items:center;gap:10px;justify-content:flex-end}
+  .track{flex:1;max-width:140px;height:7px;border-radius:4px;background:#232c40;overflow:hidden}
+  .fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#2f6ea3,var(--accent))}
+  tr.top .fill{background:linear-gradient(90deg,#8a6a1e,var(--gold))}
+  tr.mixrow .fill{background:linear-gradient(90deg,#8a6a1e,var(--gold))}
+  .scoreval{width:46px;text-align:right;font-weight:650}
+  .cost{font-weight:650;padding:2px 8px;border-radius:6px;font-size:12.5px}
+  .cost.lo{color:#8ef0ab;background:rgba(70,194,107,.12)}
+  .cost.mid{color:#f3ce88;background:rgba(224,165,58,.12)}
+  .cost.hi{color:#f2a0a1;background:rgba(229,104,106,.13)}
+  .sub{color:var(--faint)}
+
+  .note{margin-top:14px;font-size:12px;color:var(--faint);line-height:1.6}
+
+  /* coverage grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .card{border:1px solid var(--border);border-radius:12px;background:var(--panel);padding:15px 16px}
+  .card h3{margin:0 0 3px;font-size:14.5px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+  .card .cstat{font-size:11px;color:var(--muted);margin:0 0 11px}
+  .trow{display:flex;align-items:center;gap:9px;padding:6px 0;border-top:1px solid #1c2436;font-size:12.5px}
+  .trow:first-of-type{border-top:0}
+  .trow .tname{flex:1;color:var(--text)}
+  .trow .bname{color:var(--muted);font-size:11.5px}
+  .run{font-size:11px}
+  .stat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px}
+  .stat.live{color:#8ef0ab;background:rgba(70,194,107,.14)}
+  .stat.soon{color:#f3ce88;background:rgba(224,165,58,.14)}
+  .stat.gap{color:#a7b1c6;background:#1d2436}
+  .hidden{display:none}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header>
+  <div class="hd">
+    <div class="brand">
+      <h1><span class="accent">◈</span> Security Router <span class="accent">·</span> Model Leaderboard</h1>
+      <span class="tag">best model per security task — measured, not assumed</span>
+    </div>
+    <div class="chips">
+      <div class="chip"><b>19</b><span>domains</span></div>
+      <div class="chip"><b>2</b><span>live</span></div>
+      <div class="chip"><b>8</b><span>models</span></div>
+      <div class="chip"><b>5</b><span>gaps</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="toggle" role="tablist" aria-label="View">
+    <button role="tab" id="t-board" aria-selected="true" onclick="setView('board')">Leaderboards</button>
+    <button role="tab" id="t-cov" aria-selected="false" onclick="setView('cov')">Coverage map</button>
+  </div>
+
+  <!-- LEADERBOARDS -->
+  <section id="view-board">
+    <div class="pills" id="pills"></div>
+    <div class="bmeta">
+      <div class="l"><h2 id="bm-name"></h2><p id="bm-desc"></p></div>
+      <div class="legend">
+        <span><b>meanJac</b> partial-credit quality (0–1)</span>
+        <span><b>exact</b> whole answer right</span>
+        <span><b>ans</b> returned usable answer</span>
+        <span><b>$/1k</b> cost per 1,000 Q</span>
+      </div>
+    </div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr>
+          <th class="l" style="width:44px">#</th>
+          <th class="l">Model</th>
+          <th style="width:200px">meanJac ▾</th>
+          <th>exact%</th>
+          <th>ans%</th>
+          <th>$/1k&nbsp;Q</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="note" id="board-note"></p>
+  </section>
+
+  <!-- COVERAGE -->
+  <section id="view-cov" class="hidden">
+    <div class="grid" id="grid"></div>
+    <p class="note">🟢 API-runnable · 🔴 needs sandbox/infra · <span class="stat live">live</span> evaluated ·
+      <span class="stat soon">queued</span> mapped, not yet run · <span class="stat gap">gap</span> no public benchmark exists (build opportunity).</p>
+  </section>
+</div>
+
+<script>
+  // ---- real results (CyberSOCEval, N=30) ----
+  const BOARDS = {
+    cti: {
+      name:"Threat-Intel Reasoning",
+      bench:"CyberSOCEval (Meta × CrowdStrike) · CTI task · N=30 · metric: Jaccard",
+      note:"The open-model <b>Mixture</b> (majority vote of MiniMax + Qwen + GLM) lands #2 — above GPT-5.5 and every model it's built from, second only to Opus. But MiniMax-M3 alone scores 0.722 at $3.51/1k: routing to one cheap specialist beats both the mixture and the frontier on value.",
+      rows:[
+        {m:"Claude Opus 4.8",t:"closed",j:.750,e:66.7,a:100,c:227.06},
+        {m:"Mixture — 3 open models",t:"mix",j:.744,e:63.3,a:100,c:35.45},
+        {m:"GPT-5.1",t:"closed",j:.739,e:66.7,a:100,c:11.58},
+        {m:"GLM-5.2",t:"open",j:.722,e:66.7,a:90,c:29.99},
+        {m:"MiniMax M3",t:"open",j:.722,e:60.0,a:100,c:3.51},
+        {m:"GPT-5.5",t:"closed",j:.700,e:60.0,a:100,c:14.17},
+        {m:"Qwen3-235B",t:"open",j:.684,e:56.7,a:100,c:1.95},
+        {m:"gpt-oss-120b",t:"open",j:.672,e:56.7,a:97,c:1.60},
+      ]},
+    malware: {
+      name:"Malware Analysis",
+      bench:"CyberSOCEval (Meta × CrowdStrike) · malware task · N=30 · metric: Jaccard",
+      note:"The harder leaf — no model clears 0.61. Here the closed pair holds the top, and the open Mixture (0.553) can't catch GPT-5.5 (0.582): averaging weak models doesn't build a strong one. Task-dependence is the whole point of routing.",
+      rows:[
+        {m:"Claude Opus 4.8",t:"closed",j:.601,e:30.0,a:100,c:295.44},
+        {m:"GPT-5.5",t:"closed",j:.582,e:30.0,a:97,c:19.57},
+        {m:"Mixture — 3 open models",t:"mix",j:.553,e:23.3,a:93,c:55.42},
+        {m:"GPT-5.1",t:"closed",j:.543,e:16.7,a:100,c:15.86},
+        {m:"gpt-oss-120b",t:"open",j:.542,e:23.3,a:93,c:2.33},
+        {m:"MiniMax M3",t:"open",j:.527,e:23.3,a:87,c:7.59},
+        {m:"Qwen3-235B",t:"open",j:.516,e:23.3,a:93,c:2.73},
+        {m:"GLM-5.2",t:"open",j:.445,e:16.7,a:80,c:45.10},
+      ]},
+  };
+  const SOON = [
+    ["cve","CVE→CWE","CTIBench-RCM"],["sigma","Detection Eng","Sigma (cotool)"],
+    ["code","Code Security","PrimeVul"],["logs","Log Analysis","AuditBench"],
+  ];
+  const SCALE=0.80; // meanJac bar full-scale
+  const badge={open:'<span class="badge open">open</span>',closed:'<span class="badge closed">closed</span>',mix:'<span class="badge mix">vote</span>'};
+  const costCls=c=>c<10?'lo':c<50?'mid':'hi';
+
+  function renderBoard(key){
+    const b=BOARDS[key];
+    document.getElementById('bm-name').textContent=b.name;
+    document.getElementById('bm-desc').textContent=b.bench;
+    document.getElementById('board-note').innerHTML="▸ "+b.note;
+    const tb=document.getElementById('rows');tb.innerHTML="";
+    b.rows.forEach((r,i)=>{
+      const top=i===0, mix=r.t==="mix";
+      const tr=document.createElement('tr');
+      tr.className=(top?"top ":"")+(mix?"mixrow":"");
+      tr.innerHTML=
+        `<td class="rank mono">${i+1}</td>`+
+        `<td class="model">${r.m}${badge[r.t]}</td>`+
+        `<td><div class="barcell"><div class="track"><div class="fill" style="width:${Math.round(r.j/SCALE*100)}%"></div></div><span class="scoreval mono">${r.j.toFixed(3)}</span></div></td>`+
+        `<td class="mono">${r.e.toFixed(1)}<span class="sub">%</span></td>`+
+        `<td class="mono">${r.a}<span class="sub">%</span></td>`+
+        `<td><span class="cost ${costCls(r.c)} mono">$${r.c.toFixed(2)}</span></td>`;
+      tb.appendChild(tr);
+    });
+  }
+
+  function renderPills(active){
+    const p=document.getElementById('pills');p.innerHTML="";
+    Object.keys(BOARDS).forEach(k=>{
+      const btn=document.createElement('button');btn.className="pill";
+      btn.setAttribute('role','tab');btn.setAttribute('aria-selected',k===active);
+      btn.innerHTML=`<span class="dot live"></span>${BOARDS[k].name}`;
+      btn.onclick=()=>{renderPills(k);renderBoard(k)};
+      p.appendChild(btn);
+    });
+    SOON.forEach(([k,name,bench])=>{
+      const btn=document.createElement('button');btn.className="pill";btn.disabled=true;
+      btn.innerHTML=`<span class="dot soon"></span>${name} <span class="sub">· soon</span>`;
+      btn.title="Queued: "+bench;
+      p.appendChild(btn);
+    });
+  }
+
+  // ---- coverage map ----
+  const COV=[
+    ["SOC / IR",[["Report interpretation","CyberSOCEval","🟢","live"],["Long-context logs","AuditBench","🟢","soon"],["Threat hunting","CyberTeam","🟢","soon"],["Alert triage","BOTSv3 / Simbian","🔴","soon"]]],
+    ["Threat Intel",[["Multi-select reasoning","CyberSOCEval-CTI","🟢","live"],["Knowledge","CTIBench-MCQ","🟢","soon"],["ATT&CK extraction","CTIBench-ATE","🟢","soon"],["RAG-grounded","CTIConnect","🟢","soon"]]],
+    ["Malware",[["Report interpretation","CyberSOCEval","🟢","live"],["Behavior classification","behavior-audit","🟢","soon"],["Reverse engineering","REBench","🔴","soon"]]],
+    ["Vuln Mgmt",[["CVE→CWE","CTIBench-RCM","🟢","soon"],["CVSS scoring","CTIBench-VSP","🟢","soon"],["Prioritization","KEV / EPSS","🟢","soon"]]],
+    ["Code Security",[["Vuln detection","PrimeVul","🟢","soon"],["CWE-type","VulDetectBench","🟢","soon"],["Secure code gen","SecurityEval","🟡","soon"],["Vuln repair","VulRepair","🟢","soon"]]],
+    ["Detection Eng",[["Sigma → ATT&CK","Sigma (cotool)","🟢","soon"],["Rule generation","GenTI","🔴","soon"]]],
+    ["DFIR",[["Forensics knowledge","DFIR-Metric I","🟢","soon"],["Log / anomaly","LogEval","🟢","soon"]]],
+    ["Cloud",[["IaC security","IaC-Eval","🟢","soon"],["K8s misconfig","GenKubeSec","🟢","soon"],["CSPM/CNAPP posture","—","","gap"]]],
+    ["Identity (IAM)",[["RBAC / authz","OrgAccess","🟢","soon"],["Policy comprehension","Quacky","🟡","soon"],["AD attack/defense","—","","gap"]]],
+    ["OT / ICS",[["OT knowledge","CyberCertBench","🟢","soon"],["Substation agent","CritBench","🔴","soon"]]],
+    ["Network",[["IDS rule gen","GenTI","🟡","soon"],["PCAP forensics","RAG-PCAP","🟢","soon"],["Firewall/config sec","—","","gap"]]],
+    ["Data / DLP",[["PII detection","PII-Bench","🟢","soon"],["Secret detection","secret-leak","🟢","soon"],["Data-exfil","Tool-Agents","🔴","soon"]]],
+    ["GRC",[["Cert knowledge","CyberCertBench","🟢","soon"],["Law QA","LegiLM","🟡","soon"],["Control→framework map","—","","gap"]]],
+    ["Phishing",[["Webpage detection","PhreshPhish","🟢","soon"],["Email (agentic)","PhishNChips","🟢","soon"],["BEC detection","—","","gap"]]],
+    ["Insider Threat",[["Triage + verdict","OrgForge-IT","🟢","soon"]]],
+    ["Offensive",[["CTF solving","Cybench","🔴","soon"],["Pentest lifecycle","AutoPenBench","🔴","soon"],["Exploit dev","ExploitGym","🔴","soon"],["Vuln discovery+patch","ZeroDayBench","🔴","soon"]]],
+    ["Knowledge",[["Broad MCQ","CyberMetric","🟢","soon"]]],
+    ["Safety / Dual-Use",[["Malicious refusal","StrongREJECT","🟡","soon"],["Over-refusal","XSTest","🟢","soon"],["Hazardous knowledge","WMDP","🟢","soon"]]],
+    ["Agent Security",[["Prompt injection","AgentDojo","🔴","soon"],["MCP tool-use","MSB","🔴","soon"]]],
+  ];
+  function renderCov(){
+    const g=document.getElementById('grid');g.innerHTML="";
+    COV.forEach(([dom,tasks])=>{
+      const live=tasks.filter(t=>t[3]==="live").length;
+      const gap=tasks.filter(t=>t[3]==="gap").length;
+      const stat=live?`${live} live · ${tasks.length} tasks`:gap?`${tasks.length} tasks · ${gap} gap`:`${tasks.length} tasks queued`;
+      const card=document.createElement('div');card.className="card";
+      card.innerHTML=`<h3>${dom}</h3><p class="cstat">${stat}</p>`+
+        tasks.map(([tn,bn,run,st])=>
+          `<div class="trow"><span class="run">${run||"·"}</span><span class="tname">${tn}</span>`+
+          `<span class="bname">${bn}</span><span class="stat ${st}">${st==="live"?"live":st==="gap"?"gap":"queued"}</span></div>`).join("");
+      g.appendChild(card);
+    });
+  }
+
+  function setView(v){
+    const board=v==='board';
+    document.getElementById('view-board').classList.toggle('hidden',!board);
+    document.getElementById('view-cov').classList.toggle('hidden',board);
+    document.getElementById('t-board').setAttribute('aria-selected',board);
+    document.getElementById('t-cov').setAttribute('aria-selected',!board);
+  }
+
+  renderPills('cti');renderBoard('cti');renderCov();
+</script>
