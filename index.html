@@ -1,215 +1,457 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Security Router · Model Leaderboard</title>
+<link rel="stylesheet" href="assets/fonts.css">
 <style>
+  /* ─── shadcn "stone" design tokens ─── */
   :root{
-    --ground:#0d1220; --panel:#161d2b; --panel2:#1b2437; --row:#141b29;
-    --border:#263145; --border2:#324063; --text:#e8edf7; --muted:#8b98b0; --faint:#5d6a83;
-    --accent:#57b6ff; --gold:#f4c05a; --green:#46c26b; --amber:#e0a53a; --red:#e5686a;
+    --font-sans:'Geist',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --font-mono:'Geist Mono',ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --radius:0px;
+    --nav-h:56px;
+  }
+  html[data-theme="light"]{
+    --background:#ffffff; --card:#ffffff; --foreground:#0c0a09; --muted:#f5f5f4;
+    --muted-foreground:#79716b; --border:#e7e5e4; --primary:#1c1917;
+    --primary-foreground:#fafaf9; --ring:#a6a09b;
+    --grid-line:rgba(12,10,9,.08); --grid-line-strong:rgba(12,10,9,.14);
+    --bar:#57534e; --bar-track:#ececeb; --accent-data:#009588;
+    --pos:#008236; --warn:#a16207; --neg:#e40014;
+  }
+  html[data-theme="dark"]{
+    --background:#000000; --card:#0c0a09; --foreground:#fafaf9; --muted:#292524;
+    --muted-foreground:#a6a09b; --border:#292524; --primary:#fafaf9;
+    --primary-foreground:#1c1917; --ring:#79716b;
+    --grid-line:rgba(250,250,249,.08); --grid-line-strong:rgba(250,250,249,.15);
+    --bar:#a6a09b; --bar-track:#1a1714; --accent-data:#00bb7f;
+    --pos:#4ade80; --warn:#fcbb00; --neg:#fb2c36;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--ground);color:var(--text);
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    -webkit-font-smoothing:antialiased;line-height:1.5}
-  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
-  .wrap{max-width:1040px;margin:0 auto;padding:0 20px 64px}
-  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#111827,#0d1220);
-    position:sticky;top:0;z-index:20}
-  .hd{max-width:1040px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;
-    justify-content:space-between;gap:20px;flex-wrap:wrap}
-  .brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-  .brand h1{font-size:19px;letter-spacing:-.02em;margin:0;font-weight:750}
-  .brand .accent{color:var(--accent)} .brand .tag{font-size:12.5px;color:var(--muted)}
-  .chips{display:flex;gap:8px;flex-wrap:wrap}
-  .chip{display:flex;flex-direction:column;align-items:flex-end;padding:6px 11px;border:1px solid var(--border);
-    border-radius:8px;background:var(--panel)}
-  .chip b{font-size:15px;font-weight:700}
-  .chip span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-  .toggle{display:flex;gap:4px;margin:22px 0 18px;background:var(--panel);border:1px solid var(--border);
-    border-radius:10px;padding:4px;width:fit-content}
-  .toggle button{appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;
-    font-size:13.5px;font-weight:600;padding:8px 16px;border-radius:7px;cursor:pointer;transition:.15s}
-  .toggle button[aria-selected="true"]{background:var(--panel2);color:var(--text);box-shadow:inset 0 0 0 1px var(--border2)}
-  .toggle button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-  .pill{appearance:none;border:1px solid var(--border);background:var(--panel);color:var(--muted);
-    font:inherit;font-size:13px;font-weight:600;padding:7px 13px;border-radius:20px;cursor:pointer;
-    display:flex;align-items:center;gap:7px;transition:.15s}
-  .pill[aria-selected="true"]{border-color:var(--accent);color:var(--text);
-    box-shadow:0 0 0 1px var(--accent),0 0 18px -6px var(--accent)}
+  html,body{margin:0}
+  body{background:var(--background);color:var(--foreground);
+    font-family:var(--font-sans);-webkit-font-smoothing:antialiased;
+    font-size:14px;line-height:1.5;letter-spacing:-.006em}
+  .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;letter-spacing:0}
+  a{color:inherit;text-decoration:none}
+  ::selection{background:var(--accent-data);color:#fff}
+
+  /* hatch motif */
+  .hatch{background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,var(--grid-line) 4px,var(--grid-line) 5px)}
+
+  /* ─── top bar ─── */
+  header.topbar{position:sticky;top:0;z-index:30;background:var(--background);
+    border-bottom:1px solid var(--border)}
+  .bar{max-width:1160px;margin:0 auto;height:var(--nav-h);padding:0 24px;
+    display:flex;align-items:center;gap:28px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:600;font-size:13px;
+    letter-spacing:.02em;white-space:nowrap}
+  .brand .glyph{color:var(--foreground);font-size:14px}
+  .brand .sep{color:var(--muted-foreground);font-weight:400}
+  .brand .sub{color:var(--muted-foreground);font-weight:500}
+  nav.tabs{display:flex;align-items:stretch;height:100%;margin-left:6px}
+  .tab{appearance:none;background:none;border:0;height:100%;padding:0 16px;
+    font:inherit;font-size:13px;font-weight:500;color:var(--muted-foreground);
+    cursor:pointer;position:relative;transition:color .15s;letter-spacing:-.01em}
+  .tab:hover{color:var(--foreground)}
+  .tab[aria-selected="true"]{color:var(--foreground)}
+  .tab[aria-selected="true"]::after{content:"";position:absolute;left:0;right:0;bottom:-1px;
+    height:1.5px;background:var(--foreground)}
+  .tab:focus-visible{outline:1.5px solid var(--ring);outline-offset:-4px}
+  .spacer{flex:1}
+  .theme{appearance:none;width:34px;height:34px;border:1px solid var(--border);
+    background:var(--card);color:var(--foreground);cursor:pointer;display:grid;
+    place-items:center;font-size:14px;transition:background .15s,border-color .15s}
+  .theme:hover{border-color:var(--ring)}
+  .theme:focus-visible{outline:1.5px solid var(--ring);outline-offset:2px}
+
+  .wrap{max-width:1160px;margin:0 auto;padding:0 24px 96px}
+
+  /* ─── hero / readme block ─── */
+  .hero{display:grid;grid-template-columns:1fr minmax(280px,420px);
+    border-left:1px solid var(--grid-line);border-right:1px solid var(--grid-line);
+    border-bottom:1px solid var(--grid-line)}
+  .hero-l{padding:38px 34px 40px;border-right:1px solid var(--grid-line);position:relative;overflow:hidden}
+  .hero-l::before{content:"";position:absolute;top:0;right:0;width:120px;height:100%;
+    opacity:.5;pointer-events:none;
+    background-image:repeating-linear-gradient(-45deg,transparent,transparent 5px,var(--grid-line) 5px,var(--grid-line) 6px);
+    -webkit-mask:linear-gradient(90deg,transparent,#000);mask:linear-gradient(90deg,transparent,#000)}
+  .eyebrow{font-size:11px;color:var(--muted-foreground);letter-spacing:.04em;
+    margin:0 0 18px;display:flex;align-items:center;gap:8px}
+  .eyebrow .live-dot{width:6px;height:6px;border-radius:50%;background:var(--pos);
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--pos) 22%,transparent)}
+  h1.title{margin:0;font-weight:400;font-size:34px;line-height:1.1;letter-spacing:-.028em;
+    max-width:16ch}
+  h1.title em{font-style:normal;color:var(--muted-foreground)}
+  .hero-desc{margin:16px 0 0;color:var(--muted-foreground);font-size:14px;max-width:44ch;line-height:1.55}
+
+  /* stat cells — hairline grid */
+  .stats{display:grid;grid-template-columns:1fr 1fr}
+  .stat-cell{padding:20px 22px;border-bottom:1px solid var(--grid-line);
+    border-right:1px solid var(--grid-line);display:flex;flex-direction:column;gap:2px;position:relative}
+  .stats .stat-cell:nth-child(2n){border-right:0}
+  .stats .stat-cell:nth-last-child(-n+2){border-bottom:0}
+  .stat-idx{position:absolute;top:12px;right:14px;font-size:10px;color:var(--muted-foreground);
+    opacity:.55;letter-spacing:.06em}
+  .stat-cell b{font-weight:500;font-size:26px;line-height:1;letter-spacing:-.02em;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+  .stat-cell span.lbl{font-size:11px;color:var(--muted-foreground);text-transform:lowercase;
+    letter-spacing:.01em;margin-top:4px}
+
+  /* ─── domain pills ─── */
+  .pills{display:flex;flex-wrap:wrap;margin:26px 0 0;
+    border-top:1px solid var(--grid-line);border-left:1px solid var(--grid-line)}
+  .pill{appearance:none;background:none;border:0;border-right:1px solid var(--grid-line);
+    border-bottom:1px solid var(--grid-line);font:inherit;font-size:12.5px;font-weight:500;
+    color:var(--muted-foreground);padding:9px 15px;cursor:pointer;display:flex;align-items:center;
+    gap:8px;transition:color .15s,background .15s;position:relative}
+  .pill:hover:not(:disabled){color:var(--foreground);background:var(--card)}
+  .pill[aria-selected="true"]{color:var(--foreground);background:var(--card)}
+  .pill[aria-selected="true"]::before{content:"";position:absolute;left:0;top:0;bottom:0;
+    width:2px;background:var(--accent-data)}
   .pill:disabled{opacity:.5;cursor:not-allowed}
-  .pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .dot{width:7px;height:7px;border-radius:50%;flex:none}
-  .dot.live{background:var(--green)} .dot.soon{background:var(--amber)}
-  .bmeta{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
-    padding:14px 16px;border:1px solid var(--border);border-radius:11px 11px 0 0;background:var(--panel);border-bottom:0}
-  .bmeta .l h2{margin:0 0 2px;font-size:15.5px;letter-spacing:-.01em}
-  .bmeta .l p{margin:0;font-size:12.5px;color:var(--muted)}
-  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
-  .legend b{color:var(--text);font-weight:600}
-  .tblwrap{overflow-x:auto;border:1px solid var(--border);border-radius:0 0 11px 11px;background:var(--panel)}
-  table{width:100%;border-collapse:collapse;min-width:620px}
-  thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);
-    font-weight:600;text-align:right;padding:11px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+  .pill:focus-visible{outline:1.5px solid var(--ring);outline-offset:-3px}
+  .dot{width:6px;height:6px;border-radius:50%;flex:none}
+  .dot.live{background:var(--pos)} .dot.soon{background:var(--warn)}
+  .pill .idx{font-family:var(--font-mono);font-size:10px;color:var(--muted-foreground);opacity:.6}
+  .pill .soon-tag{color:var(--muted-foreground);opacity:.7;font-size:11px}
+
+  /* ─── board ─── */
+  .board{margin-top:26px;border:1px solid var(--grid-line)}
+  .bmeta{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
+    padding:18px 20px;border-bottom:1px solid var(--grid-line)}
+  .bmeta h2{margin:0 0 5px;font-size:16px;font-weight:500;letter-spacing:-.02em}
+  .bmeta .desc{margin:0;font-size:11.5px;color:var(--muted-foreground);line-height:1.5;max-width:70ch}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:10.5px;color:var(--muted-foreground)}
+  .legend b{color:var(--foreground);font-weight:500;font-family:var(--font-mono)}
+  .tblwrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:660px}
+  thead th{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted-foreground);
+    font-weight:500;text-align:right;padding:11px 16px;border-bottom:1px solid var(--grid-line);
+    white-space:nowrap;font-family:var(--font-mono);user-select:none}
   thead th.l{text-align:left}
-  tbody td{padding:12px 14px;border-bottom:1px solid #1c2436;text-align:right;font-size:13.5px}
+  thead th.sortable{cursor:pointer;transition:color .15s}
+  thead th.sortable:hover{color:var(--foreground)}
+  thead th .arrow{opacity:0;margin-left:3px}
+  thead th[aria-sort] .arrow{opacity:1;color:var(--accent-data)}
+  tbody td{padding:13px 16px;border-bottom:1px solid var(--grid-line);text-align:right;font-size:13px}
   tbody tr:last-child td{border-bottom:0}
-  tbody tr:hover td{background:var(--row)}
-  td.rank{color:var(--faint);width:44px;text-align:center;font-size:13px}
-  tr.top td.rank{color:var(--gold);font-weight:700}
-  td.model{text-align:left;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
-  .badge{display:inline-block;margin-left:8px;font-size:10px;font-weight:700;text-transform:uppercase;
-    letter-spacing:.05em;padding:2px 7px;border-radius:5px;vertical-align:middle}
-  .badge.open{color:#9ad0ff;background:rgba(87,182,255,.13);border:1px solid rgba(87,182,255,.3)}
-  .badge.closed{color:var(--muted);background:#1d2436;border:1px solid var(--border)}
-  .badge.mixture{color:#1a1408;background:var(--gold);border:1px solid var(--gold)}
-  tr.mixrow td{background:rgba(244,192,90,.06)} tr.mixrow{box-shadow:inset 3px 0 0 var(--gold)}
-  .barcell{display:flex;align-items:center;gap:10px;justify-content:flex-end}
-  .track{flex:1;max-width:140px;height:7px;border-radius:4px;background:#232c40;overflow:hidden}
-  .fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#2f6ea3,var(--accent))}
-  tr.top .fill,tr.mixrow .fill{background:linear-gradient(90deg,#8a6a1e,var(--gold))}
-  .scoreval{width:46px;text-align:right;font-weight:650}
-  .cost{font-weight:650;padding:2px 8px;border-radius:6px;font-size:12.5px}
-  .cost.lo{color:#8ef0ab;background:rgba(70,194,107,.12)}
-  .cost.mid{color:#f3ce88;background:rgba(224,165,58,.12)}
-  .cost.hi{color:#f2a0a1;background:rgba(229,104,106,.13)}
-  .sub{color:var(--faint)}
-  .note{margin-top:14px;font-size:12px;color:var(--faint);line-height:1.6}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
-  .card{border:1px solid var(--border);border-radius:12px;background:var(--panel);padding:15px 16px}
-  .card h3{margin:0 0 3px;font-size:14.5px;letter-spacing:-.01em}
-  .card .cstat{font-size:11px;color:var(--muted);margin:0 0 11px}
-  .trow{display:flex;align-items:center;gap:9px;padding:6px 0;border-top:1px solid #1c2436;font-size:12.5px}
+  tbody tr:hover td{background:var(--card)}
+  td.rank{color:var(--muted-foreground);opacity:.65;width:52px;text-align:left;
+    font-family:var(--font-mono);font-size:11px;letter-spacing:.05em}
+  tr.top td.rank{color:var(--accent-data);opacity:1}
+  td.model{text-align:left;font-weight:500;letter-spacing:-.01em;white-space:nowrap}
+  .badge{display:inline-block;margin-left:9px;font-family:var(--font-mono);font-size:9.5px;
+    font-weight:500;text-transform:uppercase;letter-spacing:.06em;padding:2px 6px;
+    border:1px solid var(--border);color:var(--muted-foreground);vertical-align:middle}
+  .badge.open{color:var(--foreground);border-color:var(--grid-line-strong)}
+  .badge.closed{color:var(--muted-foreground)}
+  .badge.mixture{color:var(--accent-data);border-color:color-mix(in srgb,var(--accent-data) 45%,transparent)}
+  tr.mixrow td{background:color-mix(in srgb,var(--accent-data) 5%,transparent)}
+  tr.mixrow td.rank{box-shadow:inset 2px 0 0 var(--accent-data)}
+  .barcell{display:flex;align-items:center;gap:12px;justify-content:flex-end}
+  .track{flex:1;max-width:150px;height:6px;background:var(--bar-track);overflow:hidden}
+  .fill{height:100%;background:var(--bar)}
+  tr.top .fill,tr.mixrow .fill{background:var(--accent-data)}
+  .scoreval{width:48px;text-align:right;font-weight:500;font-family:var(--font-mono);font-size:12.5px}
+  .cost{font-family:var(--font-mono);font-weight:500;padding:2px 8px;font-size:12px;
+    border:1px solid transparent}
+  .cost.lo{color:var(--pos);background:color-mix(in srgb,var(--pos) 11%,transparent)}
+  .cost.mid{color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent)}
+  .cost.hi{color:var(--neg);background:color-mix(in srgb,var(--neg) 12%,transparent)}
+  .sub{color:var(--muted-foreground)}
+  .dash{color:var(--muted-foreground);opacity:.5}
+  .note{margin:16px 2px 0;font-size:11.5px;color:var(--muted-foreground);line-height:1.65;max-width:80ch}
+
+  /* ─── coverage grid ─── */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+    border-top:1px solid var(--grid-line);border-left:1px solid var(--grid-line);margin-top:4px}
+  .card{border-right:1px solid var(--grid-line);border-bottom:1px solid var(--grid-line);
+    padding:18px 20px;position:relative}
+  .card-idx{position:absolute;top:16px;right:18px;font-family:var(--font-mono);font-size:10px;
+    color:var(--muted-foreground);opacity:.5;letter-spacing:.06em}
+  .card h3{margin:0 0 3px;font-size:14px;font-weight:500;letter-spacing:-.015em}
+  .card .cstat{font-size:10.5px;color:var(--muted-foreground);margin:0 0 13px;font-family:var(--font-mono)}
+  .trow{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--grid-line);font-size:12px}
   .trow:first-of-type{border-top:0}
-  .trow .tname{flex:1;color:var(--text)} .trow .bname{color:var(--muted);font-size:11.5px}
-  .run{font-size:11px}
-  .stat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px}
-  .stat.live{color:#8ef0ab;background:rgba(70,194,107,.14)}
-  .stat.soon{color:#f3ce88;background:rgba(224,165,58,.14)}
-  .stat.gap{color:#a7b1c6;background:#1d2436}
+  .trow .run{font-size:11px;width:14px;flex:none;text-align:center}
+  .trow .tname{flex:1;color:var(--foreground)}
+  .trow .bname{color:var(--muted-foreground);font-size:10.5px;font-family:var(--font-mono)}
+  .stat{font-family:var(--font-mono);font-size:9px;font-weight:500;text-transform:uppercase;
+    letter-spacing:.05em;padding:1px 6px;border:1px solid var(--border);white-space:nowrap}
+  .stat.live{color:var(--pos);border-color:color-mix(in srgb,var(--pos) 40%,transparent)}
+  .stat.soon{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
+  .stat.gap{color:var(--muted-foreground)}
+  .cov-note{margin:22px 2px 0;font-size:11px;color:var(--muted-foreground);line-height:1.7;display:flex;
+    gap:18px;flex-wrap:wrap;align-items:center}
+
   .hidden{display:none}
+  footer{max-width:1160px;margin:0 auto;padding:26px 24px;border-top:1px solid var(--border);
+    display:flex;gap:20px;flex-wrap:wrap;font-size:11px;color:var(--muted-foreground)}
+  footer .mono{font-size:10.5px}
+  @media (max-width:820px){
+    .hero{grid-template-columns:1fr}
+    .hero-l{border-right:0;border-bottom:1px solid var(--grid-line)}
+    h1.title{font-size:28px}
+  }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<header>
-  <div class="hd">
-    <div class="brand">
-      <h1><span class="accent">◈</span> Security Router <span class="accent">·</span> Model Leaderboard</h1>
-      <span class="tag">best model per security task — measured, not assumed</span>
-    </div>
-    <div class="chips" id="chips"></div>
+<header class="topbar">
+  <div class="bar">
+    <a class="brand" href="./">
+      <span class="glyph">◈</span>SECURITY&nbsp;ROUTER
+      <span class="sep">/</span><span class="sub">MODEL LEADERBOARD</span>
+    </a>
+    <nav class="tabs" role="tablist" aria-label="View">
+      <button class="tab" role="tab" id="t-board" aria-selected="true" onclick="setView('board')">Leaderboards</button>
+      <button class="tab" role="tab" id="t-cov" aria-selected="false" onclick="setView('cov')">Coverage map</button>
+    </nav>
+    <span class="spacer"></span>
+    <button class="theme" id="theme" onclick="toggleTheme()" aria-label="Toggle color theme" title="Toggle theme">◐</button>
   </div>
 </header>
+
 <div class="wrap">
-  <div class="toggle" role="tablist" aria-label="View">
-    <button role="tab" id="t-board" aria-selected="true" onclick="setView('board')">Leaderboards</button>
-    <button role="tab" id="t-cov" aria-selected="false" onclick="setView('cov')">Coverage map</button>
-  </div>
+  <section class="hero">
+    <div class="hero-l">
+      <p class="eyebrow mono"><span class="live-dot"></span><span id="hero-suite"></span></p>
+      <h1 class="title">The best model per security task — <em>measured, not assumed.</em></h1>
+      <p class="hero-desc">Every ranking below is a real benchmark run. Route each security sub-task to the model that empirically wins it — not the one you assume is best.</p>
+    </div>
+    <div class="stats" id="chips"></div>
+  </section>
+
   <section id="view-board">
     <div class="pills" id="pills"></div>
-    <div class="bmeta">
-      <div class="l"><h2 id="bm-name"></h2><p id="bm-desc"></p></div>
-      <div class="legend">
-        <span><b>meanJac</b> partial-credit quality (0–1)</span>
-        <span><b>exact</b> whole answer right</span>
-        <span><b>ans</b> returned usable answer</span>
-        <span><b>$/1k</b> cost per 1,000 Q</span>
+    <div class="board">
+      <div class="bmeta">
+        <div class="l"><h2 id="bm-name"></h2><p class="desc" id="bm-desc"></p></div>
+        <div class="legend">
+          <span><b>score</b> partial-credit quality (0–1)</span>
+          <span><b>exact</b> whole answer right</span>
+          <span><b>ans</b> returned usable answer</span>
+          <span><b>$/1k</b> cost per 1,000 Q</span>
+        </div>
       </div>
-    </div>
-    <div class="tblwrap">
-      <table>
-        <thead><tr>
-          <th class="l" style="width:44px">#</th><th class="l">Model</th>
-          <th style="width:200px">meanJac ▾</th><th>exact%</th><th>ans%</th><th>$/1k&nbsp;Q</th>
-        </tr></thead>
-        <tbody id="rows"></tbody>
-      </table>
+      <div class="tblwrap">
+        <table>
+          <thead><tr>
+            <th class="l" style="width:52px">#</th>
+            <th class="l">Model</th>
+            <th class="sortable" data-col="score" style="width:210px">score <span class="arrow">▾</span></th>
+            <th class="sortable" data-col="exact_pct">exact% <span class="arrow">▾</span></th>
+            <th class="sortable" data-col="answered_pct">ans% <span class="arrow">▾</span></th>
+            <th class="sortable" data-col="cost_per_1k_usd">$/1k&nbsp;Q <span class="arrow">▾</span></th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
     </div>
     <p class="note" id="board-note"></p>
   </section>
+
   <section id="view-cov" class="hidden">
     <div class="grid" id="grid"></div>
-    <p class="note">🟢 API-runnable · 🔴 needs sandbox/infra · <span class="stat live">live</span> evaluated ·
-      <span class="stat soon">queued</span> mapped, not yet run · <span class="stat gap">gap</span> no public benchmark (build opportunity).</p>
+    <p class="cov-note">
+      <span>🟢 API-runnable</span><span>🔴 needs sandbox/infra</span>
+      <span><span class="stat live">live</span> evaluated</span>
+      <span><span class="stat soon">queued</span> mapped, not yet run</span>
+      <span><span class="stat gap">gap</span> no public benchmark — build opportunity</span>
+    </p>
   </section>
 </div>
 
+<footer>
+  <span class="mono" id="foot-meta"></span>
+  <span class="spacer"></span>
+  <span>Security Router · open-core evals</span>
+</footer>
+
 <script src="data/rankings.js"></script>
 <script>
-  const R = window.RANKINGS, SOON = window.RANKINGS_SOON || [], COV = window.COVERAGE || [];
-  const SCALE = 0.80;
-  const badge = t => `<span class="badge ${t}">${t==="mixture"?"vote":t}</span>`;
-  const costCls = c => c<10?'lo':c<50?'mid':'hi';
+// @ts-check
+/**
+ * Data contract (mirror of docs/CONTRACT.md — schema of record:
+ * security-llm-eval-harness/spec/results.schema.json). UI renders this shape; it does not own it.
+ * @typedef {"open"|"closed"|"mixture"} ModelType
+ * @typedef {Object} ModelRow
+ * @property {string} model               display name (required)
+ * @property {ModelType} type             required
+ * @property {number} score               primary metric, higher=better (required)
+ * @property {number} [exact_pct]         optional — may be absent or 0 → render dash
+ * @property {number} [answered_pct]      optional — may be absent or 0 → render dash
+ * @property {number} [cost_per_1k_usd]   optional — 0 when harness ran w/o .env → render dash
+ * @property {number} [latency_s]         optional — not yet emitted
+ * @property {[number,number]} [ci]       optional — not yet emitted
+ * @typedef {Object} Domain
+ * @property {string} name
+ * @property {string} benchmark
+ * @property {string} metric
+ * @property {string} [note]
+ * @property {ModelRow[]} models          pre-sorted best-first by score
+ * @typedef {Object} Rankings
+ * @property {{suite:string,n:number,generated:string}} meta
+ * @property {Record<string,Domain>} domains
+ */
 
-  // summary chips
-  const nDom = COV.length, nLive = COV.filter(d=>d[1].some(t=>t[3]==="live")).length;
-  const nGap = COV.reduce((a,d)=>a+d[1].filter(t=>t[3]==="gap").length,0);
-  const nModels = R.domains[Object.keys(R.domains)[0]].models.length;
-  document.getElementById('chips').innerHTML =
-    [[nDom,"domains"],[nLive,"live"],[nModels,"models"],[nGap,"gaps"]]
-    .map(([b,s])=>`<div class="chip"><b>${b}</b><span>${s}</span></div>`).join("");
+/** @type {Rankings} */
+const R = /** @type {any} */(window).RANKINGS;
+/** @type {[string,string][]} */
+const SOON = /** @type {any} */(window).RANKINGS_SOON || [];
+/** @type {[string, [string,string,string,string][]][]} */
+const COV = /** @type {any} */(window).COVERAGE || [];
 
-  function renderBoard(key){
-    const b = R.domains[key];
-    document.getElementById('bm-name').textContent = b.name;
-    document.getElementById('bm-desc').textContent = b.benchmark;
-    document.getElementById('board-note').innerHTML = "▸ " + (b.note||"");
-    const tb = document.getElementById('rows'); tb.innerHTML = "";
-    b.models.forEach((r,i)=>{
-      const top=i===0, mix=r.type==="mixture";
-      const tr=document.createElement('tr');
-      tr.className=(top?"top ":"")+(mix?"mixrow":"");
-      tr.innerHTML =
-        `<td class="rank mono">${i+1}</td>`+
-        `<td class="model">${r.model}${badge(r.type)}</td>`+
-        `<td><div class="barcell"><div class="track"><div class="fill" style="width:${Math.round(r.score/SCALE*100)}%"></div></div><span class="scoreval mono">${r.score.toFixed(3)}</span></div></td>`+
-        `<td class="mono">${r.exact_pct.toFixed(1)}<span class="sub">%</span></td>`+
-        `<td class="mono">${r.answered_pct}<span class="sub">%</span></td>`+
-        `<td><span class="cost ${costCls(r.cost_per_1k_usd)} mono">$${r.cost_per_1k_usd.toFixed(2)}</span></td>`;
-      tb.appendChild(tr);
-    });
-  }
-  function renderPills(active){
-    const p=document.getElementById('pills'); p.innerHTML="";
-    Object.keys(R.domains).forEach(k=>{
-      const btn=document.createElement('button'); btn.className="pill";
-      btn.setAttribute('role','tab'); btn.setAttribute('aria-selected',k===active);
-      btn.innerHTML=`<span class="dot live"></span>${R.domains[k].name}`;
-      btn.onclick=()=>{renderPills(k);renderBoard(k)};
-      p.appendChild(btn);
-    });
-    SOON.forEach(([name,bench])=>{
-      const btn=document.createElement('button'); btn.className="pill"; btn.disabled=true;
-      btn.innerHTML=`<span class="dot soon"></span>${name} <span class="sub">· soon</span>`;
-      btn.title="Queued: "+bench; p.appendChild(btn);
-    });
-  }
-  function renderCov(){
-    const g=document.getElementById('grid'); g.innerHTML="";
-    COV.forEach(([dom,tasks])=>{
-      const live=tasks.filter(t=>t[3]==="live").length, gap=tasks.filter(t=>t[3]==="gap").length;
-      const stat=live?`${live} live · ${tasks.length} tasks`:gap?`${tasks.length} tasks · ${gap} gap`:`${tasks.length} tasks queued`;
-      const card=document.createElement('div'); card.className="card";
-      card.innerHTML=`<h3>${dom}</h3><p class="cstat">${stat}</p>`+
-        tasks.map(([tn,bn,run,st])=>
-          `<div class="trow"><span class="run">${run||"·"}</span><span class="tname">${tn}</span>`+
-          `<span class="bname">${bn}</span><span class="stat ${st}">${st==="live"?"live":st==="gap"?"gap":"queued"}</span></div>`).join("");
-      g.appendChild(card);
-    });
-  }
-  function setView(v){
-    const board=v==='board';
-    document.getElementById('view-board').classList.toggle('hidden',!board);
-    document.getElementById('view-cov').classList.toggle('hidden',board);
-    document.getElementById('t-board').setAttribute('aria-selected',board);
-    document.getElementById('t-cov').setAttribute('aria-selected',!board);
-  }
-  const first=Object.keys(R.domains)[0];
-  renderPills(first); renderBoard(first); renderCov();
+/* dash rule: optional fields may be absent OR 0 → dash, never a literal "0" */
+const isBlank = v => v == null || v === 0;
+const two = i => String(i).padStart(2, "0");
+
+/* ── theme ── */
+function toggleTheme(){
+  const el = document.documentElement;
+  el.setAttribute("data-theme", el.getAttribute("data-theme") === "dark" ? "light" : "dark");
+}
+
+/* ── summary stat cells (fully data-driven; no hardcoded counts) ── */
+const nDom   = COV.length;
+const nLive  = COV.filter(d => d[1].some(t => t[3] === "live")).length;
+const nGap   = COV.reduce((a, d) => a + d[1].filter(t => t[3] === "gap").length, 0);
+const domKeys = Object.keys(R.domains);
+const nModels = domKeys.length ? R.domains[domKeys[0]].models.length : 0;
+document.getElementById("chips").innerHTML =
+  [[nModels,"models"],[domKeys.length,"live domains"],[nDom,"domains mapped"],[nGap,"benchmark gaps"]]
+  .map(([b,s],i)=>`<div class="stat-cell"><span class="stat-idx mono">${two(i+1)}</span>`+
+    `<b>${b}</b><span class="lbl">${s}</span></div>`).join("");
+document.getElementById("hero-suite").textContent =
+  `${R.meta.suite} · N=${R.meta.n} · ${R.meta.generated}`;
+document.getElementById("foot-meta").textContent =
+  `${R.meta.suite} · N=${R.meta.n}/task · generated ${R.meta.generated}`;
+
+/* ── board ── */
+const badge = t => `<span class="badge ${t}">${t === "mixture" ? "vote" : t}</span>`;
+const costCls = c => c < 10 ? "lo" : c < 50 ? "mid" : "hi";
+let curKey = null;
+let sort = null; // {col, dir:-1|1} — null = contract order (pre-sorted best-first)
+
+function orderedModels(dom){
+  if (!sort) return dom.models;
+  const c = sort.col, dir = sort.dir;
+  return dom.models.slice().sort((a, b) => {
+    const av = a[c], bv = b[c], ab = isBlank(av), bb = isBlank(bv);
+    if (ab && bb) return 0;
+    if (ab) return 1;            // blanks always sink
+    if (bb) return -1;
+    return (av - bv) * dir;
+  });
+}
+
+function renderBoard(key){
+  curKey = key;
+  const b = R.domains[key];
+  document.getElementById("bm-name").textContent = b.name;
+  document.getElementById("bm-desc").textContent = b.benchmark;
+  document.getElementById("board-note").textContent = b.note ? "▸ " + b.note : "";
+  const maxScore = Math.max(...b.models.map(m => m.score)) || 1;
+  const rows = orderedModels(b);
+  const tb = document.getElementById("rows");
+  tb.innerHTML = "";
+  rows.forEach((r, i) => {
+    const top = i === 0 && !sort, mix = r.type === "mixture";
+    const pct = e => isBlank(r[e]) ? `<span class="dash">—</span>` : `${(+r[e]).toFixed(1)}<span class="sub">%</span>`;
+    const cost = isBlank(r.cost_per_1k_usd)
+      ? `<span class="dash">—</span>`
+      : `<span class="cost ${costCls(r.cost_per_1k_usd)}">$${(+r.cost_per_1k_usd).toFixed(2)}</span>`;
+    const tr = document.createElement("tr");
+    tr.className = (top ? "top " : "") + (mix ? "mixrow" : "");
+    tr.innerHTML =
+      `<td class="rank">${two(i + 1)}</td>` +
+      `<td class="model">${r.model}${badge(r.type)}</td>` +
+      `<td><div class="barcell"><div class="track"><div class="fill" style="width:${Math.round(r.score / maxScore * 100)}%"></div></div>` +
+        `<span class="scoreval">${r.score.toFixed(3)}</span></div></td>` +
+      `<td>${pct("exact_pct")}</td>` +
+      `<td>${pct("answered_pct")}</td>` +
+      `<td>${cost}</td>`;
+    tb.appendChild(tr);
+  });
+  // reflect sort state on headers
+  document.querySelectorAll("thead th.sortable").forEach(th => {
+    const c = th.getAttribute("data-col");
+    if (sort && sort.col === c){
+      th.setAttribute("aria-sort", sort.dir === -1 ? "descending" : "ascending");
+      th.querySelector(".arrow").textContent = sort.dir === -1 ? "▾" : "▴";
+    } else {
+      th.removeAttribute("aria-sort");
+      th.querySelector(".arrow").textContent = "▾";
+    }
+  });
+}
+
+document.querySelectorAll("thead th.sortable").forEach(th => {
+  th.addEventListener("click", () => {
+    const col = th.getAttribute("data-col");
+    if (sort && sort.col === col) sort.dir *= -1;
+    else sort = { col, dir: -1 };            // first click = descending (best first)
+    renderBoard(curKey);
+  });
+});
+
+function renderPills(active){
+  const p = document.getElementById("pills");
+  p.innerHTML = "";
+  Object.keys(R.domains).forEach((k, i) => {
+    const btn = document.createElement("button");
+    btn.className = "pill";
+    btn.setAttribute("role", "tab");
+    btn.setAttribute("aria-selected", String(k === active));
+    btn.innerHTML = `<span class="idx">${two(i + 1)}</span><span class="dot live"></span>${R.domains[k].name}`;
+    btn.onclick = () => { sort = null; renderPills(k); renderBoard(k); };
+    p.appendChild(btn);
+  });
+  SOON.forEach(([name, bench]) => {
+    const btn = document.createElement("button");
+    btn.className = "pill";
+    btn.disabled = true;
+    btn.innerHTML = `<span class="dot soon"></span>${name} <span class="soon-tag">· soon</span>`;
+    btn.title = "Queued: " + bench;
+    p.appendChild(btn);
+  });
+}
+
+function renderCov(){
+  const g = document.getElementById("grid");
+  g.innerHTML = "";
+  COV.forEach(([dom, tasks], i) => {
+    const live = tasks.filter(t => t[3] === "live").length;
+    const gap = tasks.filter(t => t[3] === "gap").length;
+    const stat = live ? `${live} live · ${tasks.length} tasks`
+      : gap ? `${tasks.length} tasks · ${gap} gap`
+      : `${tasks.length} tasks queued`;
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML =
+      `<span class="card-idx">${two(i + 1)}</span><h3>${dom}</h3><p class="cstat">${stat}</p>` +
+      tasks.map(([tn, bn, run, st]) =>
+        `<div class="trow"><span class="run">${run || "·"}</span><span class="tname">${tn}</span>` +
+        `<span class="bname">${bn}</span><span class="stat ${st}">${st === "live" ? "live" : st === "gap" ? "gap" : "queued"}</span></div>`
+      ).join("");
+    g.appendChild(card);
+  });
+}
+
+function setView(v){
+  const board = v === "board";
+  document.getElementById("view-board").classList.toggle("hidden", !board);
+  document.getElementById("view-cov").classList.toggle("hidden", board);
+  document.getElementById("t-board").setAttribute("aria-selected", String(board));
+  document.getElementById("t-cov").setAttribute("aria-selected", String(!board));
+}
+
+const first = Object.keys(R.domains)[0];
+renderPills(first);
+renderBoard(first);
+renderCov();
 </script>
 </body>
 </html>
