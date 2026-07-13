@@ -1,8 +1,8 @@
 # security-llm-leaderboard
 
-The public leaderboard for the **Security Router** project — which LLM is best at each security
-task, measured on real benchmarks. A static site with **no logic and no secrets**: it renders a
-`rankings.json` produced by [security-llm-eval-harness](../security-llm-eval-harness).
+A public leaderboard evaluating which LLM is best at each security task, measured on real
+benchmarks. A static site with **no logic and no secrets**: it renders a `rankings.json`
+produced by [security-llm-eval-harness](../security-llm-eval-harness).
 
 Live domains: **Threat-Intel Reasoning** and **Malware Analysis** (CyberSOCEval). The **Coverage
 map** view shows all 19 security domains, their target benchmarks, and status.
