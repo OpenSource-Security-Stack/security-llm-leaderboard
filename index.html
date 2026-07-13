@@ -49,7 +49,7 @@
     display:flex;align-items:center;gap:28px}
   .brand{display:flex;align-items:center;gap:9px;font-weight:600;font-size:13px;
     letter-spacing:.02em;white-space:nowrap}
-  .brand .glyph{color:var(--foreground);font-size:14px}
+  .brand .glyph{width:15px;height:15px;color:var(--accent-data);display:block;flex:none}
   .brand .sep{color:var(--muted-foreground);font-weight:400}
   .brand .sub{color:var(--muted-foreground);font-weight:500}
   nav.tabs{display:flex;align-items:stretch;height:100%;margin-left:6px}
@@ -203,7 +203,7 @@
 <header class="topbar">
   <div class="bar">
     <a class="brand" href="./">
-      <span class="glyph">◈</span>SECURITY&nbsp;LLM&nbsp;EVALS
+      <svg class="glyph" viewBox="0 0 32 32" aria-hidden="true"><path fill-rule="evenodd" fill="currentColor" d="M16 5 L27 16 L16 27 L5 16 Z M16 11.5 L20.5 16 L16 20.5 L11.5 16 Z"/></svg>SECURITY&nbsp;LLM&nbsp;EVALS
       <span class="sep">/</span><span class="sub">LEADERBOARD</span>
     </a>
     <nav class="tabs" role="tablist" aria-label="View">
