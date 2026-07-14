@@ -9,6 +9,8 @@ window.RANKINGS = {
     "cti": {
       "name": "Threat-Intel Reasoning",
       "benchmark": "CyberSOCEval (Meta \u00d7 CrowdStrike) \u00b7 CTI task \u00b7 metric: Jaccard",
+      "domain": "cti",
+      "domain_name": "Threat Intelligence",
       "metric": "jaccard",
       "direction": "higher",
       "models": [
@@ -115,6 +117,8 @@ window.RANKINGS = {
     "cti_ate": {
       "name": "ATT&CK Technique Extraction",
       "benchmark": "CTIBench-ATE \u00b7 text \u2192 MITRE technique IDs \u00b7 metric: mean F1 \u00b7 full set (60)",
+      "domain": "cti",
+      "domain_name": "Threat Intelligence",
       "metric": "f1",
       "direction": "higher",
       "models": [
@@ -175,17 +179,31 @@ window.RANKINGS = {
           ]
         },
         {
+          "model": "gpt-oss-120b",
+          "type": "open",
+          "score": 0.665,
+          "exact_pct": 8.3,
+          "answered_pct": 100,
+          "cost_per_1k_usd": 1.11,
+          "latency_s": 20.0,
+          "n": 60,
+          "ci": [
+            0.601,
+            0.726
+          ]
+        },
+        {
           "model": "GLM-5.2",
           "type": "open",
-          "score": 0.521,
-          "exact_pct": 4.5,
-          "answered_pct": 68,
-          "cost_per_1k_usd": 49.63,
-          "latency_s": 112.7,
-          "n": 44,
+          "score": 0.467,
+          "exact_pct": 6.7,
+          "answered_pct": 60,
+          "cost_per_1k_usd": 57.17,
+          "latency_s": 113.7,
+          "n": 60,
           "ci": [
-            0.403,
-            0.632
+            0.364,
+            0.569
           ]
         }
       ]
@@ -193,6 +211,8 @@ window.RANKINGS = {
     "cti_mcq": {
       "name": "CTI Knowledge (MCQ)",
       "benchmark": "CTIBench-MCQ \u00b7 CTI knowledge, 4-option MCQ \u00b7 metric: accuracy",
+      "domain": "cti",
+      "domain_name": "Threat Intelligence",
       "metric": "accuracy",
       "direction": "higher",
       "models": [
@@ -285,6 +305,8 @@ window.RANKINGS = {
     "cve_cwe": {
       "name": "CVE\u2192CWE Mapping",
       "benchmark": "CTIBench-RCM \u00b7 CVE root-cause \u2192 CWE \u00b7 metric: accuracy",
+      "domain": "vulnmgmt",
+      "domain_name": "Vulnerability Management",
       "metric": "accuracy",
       "direction": "higher",
       "models": [
@@ -377,6 +399,8 @@ window.RANKINGS = {
     "cvss": {
       "name": "CVSS Severity Scoring",
       "benchmark": "CTIBench-VSP \u00b7 CVE description \u2192 CVSS v3.1 \u00b7 metric: MAE (lower is better)",
+      "domain": "vulnmgmt",
+      "domain_name": "Vulnerability Management",
       "metric": "mae",
       "direction": "lower",
       "models": [
@@ -469,6 +493,8 @@ window.RANKINGS = {
     "malware": {
       "name": "Malware Analysis",
       "benchmark": "CyberSOCEval (Meta \u00d7 CrowdStrike) \u00b7 malware task \u00b7 metric: Jaccard",
+      "domain": "malware",
+      "domain_name": "Malware Analysis",
       "metric": "jaccard",
       "direction": "higher",
       "models": [
@@ -571,6 +597,100 @@ window.RANKINGS = {
           ]
         }
       ]
+    },
+    "sigma_attack": {
+      "name": "Sigma Rule \u2192 ATT&CK",
+      "benchmark": "SigmaHQ rules (tags stripped) \u2192 technique IDs \u00b7 metric: mean F1",
+      "domain": "deteng",
+      "domain_name": "Detection Engineering",
+      "metric": "f1",
+      "direction": "higher",
+      "models": [
+        {
+          "model": "Claude Opus 4.8",
+          "type": "closed",
+          "score": 0.577,
+          "exact_pct": 42.0,
+          "answered_pct": 100,
+          "cost_per_1k_usd": 7.86,
+          "latency_s": 4.0,
+          "n": 50,
+          "ci": [
+            0.452,
+            0.693
+          ]
+        },
+        {
+          "model": "GPT-5.5",
+          "type": "closed",
+          "score": 0.575,
+          "exact_pct": 46.0,
+          "answered_pct": 100,
+          "cost_per_1k_usd": 34.33,
+          "latency_s": 23.6,
+          "n": 50,
+          "ci": [
+            0.448,
+            0.695
+          ]
+        },
+        {
+          "model": "DeepSeek-V4-Pro",
+          "type": "open",
+          "score": 0.526,
+          "exact_pct": 40.0,
+          "answered_pct": 100,
+          "cost_per_1k_usd": 3.62,
+          "latency_s": 29.2,
+          "n": 50,
+          "ci": [
+            0.397,
+            0.649
+          ]
+        },
+        {
+          "model": "MiniMax M3",
+          "type": "open",
+          "score": 0.505,
+          "exact_pct": 42.0,
+          "answered_pct": 100,
+          "cost_per_1k_usd": 0.82,
+          "latency_s": 5.7,
+          "n": 50,
+          "ci": [
+            0.375,
+            0.632
+          ]
+        },
+        {
+          "model": "GLM-5.2",
+          "type": "open",
+          "score": 0.459,
+          "exact_pct": 36.0,
+          "answered_pct": 86,
+          "cost_per_1k_usd": 18.59,
+          "latency_s": 202.5,
+          "n": 50,
+          "ci": [
+            0.333,
+            0.584
+          ]
+        },
+        {
+          "model": "gpt-oss-120b",
+          "type": "open",
+          "score": 0.438,
+          "exact_pct": 30.0,
+          "answered_pct": 100,
+          "cost_per_1k_usd": 0.49,
+          "latency_s": 15.5,
+          "n": 50,
+          "ci": [
+            0.318,
+            0.56
+          ]
+        }
+      ]
     }
   },
   "rollups": {
@@ -602,7 +722,7 @@ window.RANKINGS = {
         {
           "model": "GPT-5.5",
           "type": "closed",
-          "win_rate": 0.806,
+          "win_rate": 0.822,
           "coverage": [
             3,
             3
@@ -618,7 +738,7 @@ window.RANKINGS = {
         {
           "model": "DeepSeek-V4-Pro",
           "type": "open",
-          "win_rate": 0.494,
+          "win_rate": 0.544,
           "coverage": [
             3,
             3
@@ -632,7 +752,7 @@ window.RANKINGS = {
         {
           "model": "MiniMax M3",
           "type": "open",
-          "win_rate": 0.478,
+          "win_rate": 0.511,
           "coverage": [
             3,
             3
@@ -646,9 +766,9 @@ window.RANKINGS = {
         {
           "model": "gpt-oss-120b",
           "type": "open",
-          "win_rate": 0.267,
+          "win_rate": 0.244,
           "coverage": [
-            2,
+            3,
             3
           ],
           "best_at": [],
@@ -668,7 +788,7 @@ window.RANKINGS = {
           "best_at": [],
           "cost_per_1k_range": [
             28.38,
-            49.63
+            57.17
           ]
         },
         {

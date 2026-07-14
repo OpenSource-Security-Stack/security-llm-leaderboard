@@ -289,6 +289,7 @@ const ROLLUPS = R.rollups || {};
 const NOTES = {
   cti:  "Opus leads open-ended threat-intel reading; the top open model trails only slightly, at a fraction of the cost.",
   cvss: "The first task where Opus isn't #1 — GPT-5.5 leads CVSS scoring and Opus lands mid-board. GLM-5.2 collapses here, answering only ~2/3 of questions (refusals score worst-case). Task-dependence, proven in our own data.",
+  sigma_attack: "The closest call on the board — Opus edges GPT-5.5 by 0.002 (0.577 vs 0.575) at roughly a quarter of the cost and ~6× the speed. When quality ties, cost and latency decide the route.",
   cti_rollup:     "Opus tops Threat Intelligence, winning two of its three leaves — but the leading open model stays close on the underlying scores at far lower cost.",
   vulnmgmt_rollup:"GPT-5.5 edges Vulnerability Management by winning CVSS scoring, with Opus taking CVE→CWE — the open challenger stays within a few points at a fraction of the price.",
 };
@@ -329,22 +330,16 @@ function toggleTheme(){
   el.setAttribute("data-theme", el.getAttribute("data-theme") === "dark" ? "light" : "dark");
 }
 
-/* ── derive the 4-domain grouping, fully data-driven ──
-   multi-leaf domains come from `rollups`; every leaf not in a rollup is its own single-leaf domain. */
+/* ── derive the domain tabs from each leaf's `domain` / `domain_name` fields ──
+   group leaves by `domain`, preserving first-seen order; a domain with a matching rollup shows it. */
 function buildDomainList(){
-  const inRollup = new Set();
-  Object.values(ROLLUPS).forEach(r => r.leaves.forEach(l => inRollup.add(l)));
-  const list = [];
-  // rollup (multi-leaf) domains first, in rollups order
-  for (const [rid, r] of Object.entries(ROLLUPS)){
-    const leaves = r.leaves.filter(l => DOMAINS[l]); // only leaves whose data is present
-    if (leaves.length) list.push({ id: rid, name: r.name, leaves, rollup: r });
+  const order = [], groups = {};
+  for (const [lid, d] of Object.entries(DOMAINS)){
+    const did = d.domain || lid;                       // fall back to leaf id if field absent
+    if (!groups[did]){ groups[did] = { id: did, name: d.domain_name || d.name, leaves: [] }; order.push(did); }
+    groups[did].leaves.push(lid);
   }
-  // standalone single-leaf domains, in domains order
-  for (const lid of Object.keys(DOMAINS)){
-    if (!inRollup.has(lid)) list.push({ id: lid, name: DOMAINS[lid].name, leaves: [lid], rollup: null });
-  }
-  return list;
+  return order.map(did => ({ ...groups[did], rollup: ROLLUPS[did] || null }));
 }
 const DOMAIN_LIST = buildDomainList();
 
