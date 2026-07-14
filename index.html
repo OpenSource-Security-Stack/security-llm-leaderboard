@@ -154,6 +154,7 @@
   .fill{height:100%;background:var(--bar)}
   tr.top .fill{background:var(--accent-data)}
   .scoreval{width:52px;text-align:right;font-weight:500;font-family:var(--font-mono);font-size:12.5px}
+  td.rawcell{font-family:var(--font-mono);font-size:12px;color:var(--muted-foreground)}
   .cost{font-family:var(--font-mono);font-weight:500;padding:2px 8px;font-size:12px;border:1px solid transparent}
   .cost.lo{color:var(--pos);background:color-mix(in srgb,var(--pos) 11%,transparent)}
   .cost.mid{color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent)}
@@ -250,9 +251,10 @@
 </div>
 
 <footer>
-  <span class="mono" id="foot-meta"></span>
+  <span>Scores are normalized per benchmark (100 = flawless); not comparable across benchmarks.</span>
   <span class="spacer"></span>
-  <span>Open-core LLM security evals</span>
+  <span class="mono" id="foot-meta"></span>
+  <span>· Open-core LLM security evals</span>
 </footer>
 
 <script src="data/rankings.js"></script>
@@ -321,7 +323,6 @@ const CREDITS = [
 const isBlank = v => v == null || v === 0;
 const two = i => String(i).padStart(2, "0");
 const costCls = c => c < 10 ? "lo" : c < 50 ? "mid" : "hi";
-const metricArrow = dir => dir === "lower" ? "↓" : "↑";
 const esc = s => String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const badge = t => `<span class="badge ${t}">${t === "mixture" ? "vote" : t}</span>`;
 
@@ -373,10 +374,6 @@ function heroStats(){
 
 /* ── leaf model table (direction-aware) ── */
 const leafSort = {}; // per-leaf {col, dir}
-function barWidth(score, scores, direction){
-  if (direction === "lower"){ const min = Math.min(...scores); return Math.max(6, Math.round(min / score * 100)); }
-  const max = Math.max(...scores); return Math.max(6, Math.round(score / max * 100));
-}
 function orderedRows(leaf){
   const s = leafSort[leaf];
   const base = DOMAINS[leaf].models;
@@ -390,10 +387,9 @@ function orderedRows(leaf){
 function renderLeafTable(leaf, mount){
   const d = DOMAINS[leaf];
   const rows = orderedRows(leaf);
-  const scores = d.models.map(m => m.score);
   const maxN = Math.max(...d.models.map(m => m.n || 0));
   const s = leafSort[leaf];
-  const metricLabel = `${(d.metric || "score").toUpperCase()} ${metricArrow(d.direction)}`;
+  const rawLabel = (d.metric || "score").toUpperCase();
   const th = (col, label) => {
     const active = s && s.col === col;
     return `<th class="sortable" data-leaf="${leaf}" data-col="${col}"${active?` aria-sort="${s.dir===-1?"descending":"ascending"}"`:""}>`+
@@ -408,21 +404,23 @@ function renderLeafTable(leaf, mount){
     const nTd = r.n == null ? `<td><span class="dash">—</span></td>`
       : `<td class="ncell ${legacy?"legacy":""}"${legacy?` title="legacy cached run — smaller sample (n=${r.n})"`:""}>${r.n}</td>`;
     const ci = Array.isArray(r.ci) ? `95% CI [${r.ci[0]}, ${r.ci[1]}]` : "";
-    const lat = r.latency_s != null ? `${r.ci?" · ":""}${r.latency_s}s/q` : "";
+    const lat = r.latency_s != null ? `${ci?" · ":""}${r.latency_s}s/q` : "";
     const tip = (ci + lat) ? ` title="${ci}${lat}"` : "";
     const dec = d.metric === "mae" ? 2 : 3;
+    const norm = r.score_norm != null ? r.score_norm : (d.direction === "lower" ? 0 : r.score * 100);
     return `<tr class="${top?"top":""}">`+
       `<td class="rank">${two(i+1)}</td>`+
       `<td class="model">${esc(r.model)}${badge(r.type)}</td>`+
-      `<td><div class="barcell"><div class="track"><div class="fill" style="width:${barWidth(r.score, scores, d.direction)}%"></div></div>`+
-        `<span class="scoreval"${tip}>${r.score.toFixed(dec)}</span></div></td>`+
+      `<td><div class="barcell"><div class="track"><div class="fill" style="width:${Math.max(6, Math.round(norm))}%"></div></div>`+
+        `<span class="scoreval">${norm.toFixed(1)}</span></div></td>`+
+      `<td class="rawcell"${tip}>${r.score.toFixed(dec)}</td>`+
       `<td>${pct("exact_pct")}</td><td>${pct("answered_pct")}</td>`+
       `${nTd}<td>${cost}</td></tr>`;
   }).join("");
   mount.innerHTML =
     `<div class="tblwrap"><table><thead><tr>`+
     `<th class="l" style="width:52px">#</th><th class="l">Model</th>`+
-    th("score", metricLabel) + th("exact_pct","exact%") + th("answered_pct","ans%") +
+    th("score_norm", "score") + th("score", rawLabel) + th("exact_pct","exact%") + th("answered_pct","ans%") +
     th("n","n") + th("cost_per_1k_usd","$/1k&nbsp;Q") +
     `</tr></thead><tbody>${body}</tbody></table></div>`;
   mount.querySelectorAll("thead th.sortable").forEach(el => el.addEventListener("click", () => {
@@ -500,12 +498,12 @@ function renderDomain(dom){
 }
 function renderLeafMeta(leaf, mount, standalone){
   const d = DOMAINS[leaf];
-  const dirHint = d.direction === "lower" ? `<span class="dirhint">↓ lower is better</span>` : "";
   mount.innerHTML =
     `<div class="bmeta" style="${standalone?"":"border-top:0"}">`+
-      `<div class="l"><h2>${esc(d.name)} ${dirHint}</h2><p class="desc">${esc(d.benchmark||"")}</p></div>`+
+      `<div class="l"><h2>${esc(d.name)}</h2><p class="desc">${esc(d.benchmark||"")}</p></div>`+
       `<div class="legend">`+
-        `<span><b>${(d.metric||"score").toUpperCase()}</b> primary metric</span>`+
+        `<span><b>SCORE</b> normalized 0–100 (100 = flawless)</span>`+
+        `<span><b>${(d.metric||"score").toUpperCase()}</b> raw benchmark metric</span>`+
         `<span><b>n</b> questions scored (⚑ = legacy smaller sample)</span>`+
         `<span><b>$/1k</b> cost per 1,000 Q</span>`+
       `</div></div>`;
