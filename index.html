@@ -321,6 +321,14 @@ const two = i => String(i).padStart(2, "0");
 const costCls = c => c < 10 ? "lo" : c < 50 ? "mid" : "hi";
 const esc = s => String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const badge = t => `<span class="badge ${t}">${t === "mixture" ? "vote" : t}</span>`;
+const RELIABILITY_TIP = "% of questions with a usable answer — the rest score zero. Low reliability = the model failed to produce gradeable output (truncation, rambling, errors), not that it was wrong.";
+const COST_TIP = "cost to answer 1,000 questions of this type";
+/* accuracy leaves: SCORE, raw metric, and exact% are the same number three ways → hide raw + exact */
+const leafCollapse = leaf => {
+  const d = DOMAINS[leaf];
+  return d.models.every(m => Math.round(m.score * 1000) / 10 === m.score_norm)
+      && d.models.every(m => m.exact_pct != null && m.exact_pct === m.score_norm);
+};
 
 function toggleTheme(){
   const el = document.documentElement;
@@ -385,37 +393,39 @@ function renderLeafTable(leaf, mount){
   const rows = orderedRows(leaf);
   const s = leafSort[leaf];
   const rawLabel = (d.metric || "score").toUpperCase();
-  const th = (col, label) => {
+  const collapse = leafCollapse(leaf); // accuracy leaf → hide raw metric + exact%
+  const th = (col, label, title) => {
     const active = s && s.col === col;
-    return `<th class="sortable" data-leaf="${leaf}" data-col="${col}"${active?` aria-sort="${s.dir===-1?"descending":"ascending"}"`:""}>`+
+    return `<th class="sortable" data-leaf="${leaf}" data-col="${col}"${title?` title="${title}"`:""}${active?` aria-sort="${s.dir===-1?"descending":"ascending"}"`:""}>`+
       `${label} <span class="arrow">${active ? (s.dir===-1?"▾":"▴") : "▾"}</span></th>`;
   };
   const body = rows.map((r, i) => {
     const top = i === 0 && !s;
     const pct = k => isBlank(r[k]) ? `<span class="dash">—</span>` : `${(+r[k]).toFixed(1)}<span class="sub">%</span>`;
     const cost = isBlank(r.cost_per_1k_usd) ? `<span class="dash">—</span>`
-      : `<span class="cost ${costCls(r.cost_per_1k_usd)}">$${(+r.cost_per_1k_usd).toFixed(2)}</span>`;
+      : `<span class="cost ${costCls(r.cost_per_1k_usd)}" title="${COST_TIP}">$${(+r.cost_per_1k_usd).toFixed(2)}</span>`;
     const nTd = r.n == null ? `<td><span class="dash">—</span></td>` : `<td class="ncell">${r.n}</td>`;
     const ci = Array.isArray(r.ci) ? `95% CI [${r.ci[0]}, ${r.ci[1]}]` : "";
     const lat = r.latency_s != null ? `${ci?" · ":""}${r.latency_s}s/q` : "";
     const tip = (ci + lat) ? ` title="${ci}${lat}"` : "";
     const dec = d.metric === "mae" ? 2 : 3;
     const norm = r.score_norm != null ? r.score_norm : (d.direction === "lower" ? 0 : r.score * 100);
-    return `<tr class="${top?"top":""}">`+
-      `<td class="rank">${two(i+1)}</td>`+
-      `<td class="model">${esc(r.model)}${badge(r.type)}</td>`+
-      `<td><div class="barcell"><div class="track"><div class="fill" style="width:${Math.max(6, Math.round(norm))}%"></div></div>`+
-        `<span class="scoreval">${norm.toFixed(1)}</span></div></td>`+
-      `<td class="rawcell"${tip}>${r.score.toFixed(dec)}</td>`+
-      `<td>${pct("exact_pct")}</td><td>${pct("answered_pct")}</td>`+
-      `${nTd}<td>${cost}</td></tr>`;
+    const cells = [
+      `<td class="rank">${two(i+1)}</td>`,
+      `<td class="model">${esc(r.model)}${badge(r.type)}</td>`,
+      `<td><div class="barcell"><div class="track"><div class="fill" style="width:${Math.max(6, Math.round(norm))}%"></div></div><span class="scoreval">${norm.toFixed(1)}</span></div></td>`,
+    ];
+    if (!collapse){
+      cells.push(`<td class="rawcell"${tip}>${r.score.toFixed(dec)}</td>`);
+      cells.push(`<td>${pct("exact_pct")}</td>`);
+    }
+    cells.push(`<td>${pct("answered_pct")}</td>`, nTd, `<td>${cost}</td>`);
+    return `<tr class="${top?"top":""}">${cells.join("")}</tr>`;
   }).join("");
-  mount.innerHTML =
-    `<div class="tblwrap"><table><thead><tr>`+
-    `<th class="l" style="width:52px">#</th><th class="l">Model</th>`+
-    th("score_norm", "score") + th("score", rawLabel) + th("exact_pct","exact%") + th("answered_pct","ans%") +
-    th("n","n") + th("cost_per_1k_usd","$/1k&nbsp;Q") +
-    `</tr></thead><tbody>${body}</tbody></table></div>`;
+  const heads = [`<th class="l" style="width:52px">#</th>`, `<th class="l">Model</th>`, th("score_norm","score")];
+  if (!collapse){ heads.push(th("score", rawLabel), th("exact_pct","exact%")); }
+  heads.push(th("answered_pct","reliability", RELIABILITY_TIP), th("n","n"), th("cost_per_1k_usd","cost", COST_TIP));
+  mount.innerHTML = `<div class="tblwrap"><table><thead><tr>${heads.join("")}</tr></thead><tbody>${body}</tbody></table></div>`;
   mount.querySelectorAll("thead th.sortable").forEach(el => el.addEventListener("click", () => {
     const col = el.getAttribute("data-col");
     const cur = leafSort[leaf];
@@ -437,21 +447,24 @@ function renderRollupTable(r, mount){
     const bestAt = m.best_at && m.best_at.length ? `<span class="bestat">best at ${m.best_at.map(esc).join(", ")}</span>` : "";
     const avg = m.cost_per_1k_avg;
     const [lo, hi] = m.cost_per_1k_range || [];
-    const rangeTip = (lo != null && hi != null && lo !== hi) ? ` title="ranges $${lo.toFixed(2)}–$${hi.toFixed(2)} across benchmarks"` : "";
+    const costTip = avg == null ? "" : ` title="average cost per 1,000 questions across the domain's benchmarks${(lo!=null&&hi!=null&&lo!==hi)?`; range: $${lo.toFixed(2)}–$${hi.toFixed(2)}`:""}"`;
     const costCell = avg == null ? `<span class="dash">—</span>`
-      : `<span class="cost ${costCls(avg)}"${rangeTip}>$${avg.toFixed(2)}</span>`;
+      : `<span class="cost ${costCls(avg)}"${costTip}>$${avg.toFixed(2)}</span>`;
+    const rel = m.answered_pct_avg != null ? `${m.answered_pct_avg.toFixed(1)}<span class="sub">%</span>` : `<span class="dash">—</span>`;
     const score = m.score != null ? m.score : 0;
     return `<tr class="${top?"top":""}">`+
       `<td class="rank">${two(i+1)}</td>`+
       `<td class="model">${esc(m.model)}${badge(m.type)}${covBadge}${bestAt}</td>`+
       `<td><div class="barcell"><div class="track"><div class="fill" style="width:${Math.max(6,Math.round(score))}%"></div></div>`+
         `<span class="scoreval">${score.toFixed(1)}</span></div></td>`+
+      `<td>${rel}</td>`+
       `<td>${costCell}</td></tr>`;
   }).join("");
   mount.innerHTML =
     `<div class="tblwrap"><table><thead><tr>`+
     `<th class="l" style="width:52px">#</th><th class="l">Model</th>`+
-    `<th style="width:220px">score</th><th>$/1k&nbsp;Q (avg)</th>`+
+    `<th style="width:200px">score</th><th title="${RELIABILITY_TIP}">reliability</th>`+
+    `<th title="average cost per 1,000 questions across the domain's benchmarks">cost</th>`+
     `</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
@@ -496,15 +509,16 @@ function renderDomain(dom){
 }
 function renderLeafMeta(leaf, mount, standalone){
   const d = DOMAINS[leaf];
+  const legend = [`<span><b>SCORE</b> normalized 0–100 (100 = flawless)</span>`];
+  if (!leafCollapse(leaf)) legend.push(`<span><b>${(d.metric||"score").toUpperCase()}</b> raw benchmark metric</span>`);
+  legend.push(
+    `<span><b>RELIABILITY</b> % answered with a usable answer</span>`,
+    `<span><b>n</b> questions scored</span>`,
+    `<span><b>COST</b> to answer 1,000 questions</span>`);
   mount.innerHTML =
     `<div class="bmeta" style="${standalone?"":"border-top:0"}">`+
       `<div class="l"><h2>${esc(d.name)}</h2><p class="desc">${esc(d.benchmark||"")}</p></div>`+
-      `<div class="legend">`+
-        `<span><b>SCORE</b> normalized 0–100 (100 = flawless)</span>`+
-        `<span><b>${(d.metric||"score").toUpperCase()}</b> raw benchmark metric</span>`+
-        `<span><b>n</b> questions scored</span>`+
-        `<span><b>$/1k</b> cost per 1,000 Q</span>`+
-      `</div></div>`;
+      `<div class="legend">${legend.join("")}</div></div>`;
 }
 
 /* ── domain tabs ── */
