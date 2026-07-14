@@ -160,8 +160,6 @@
   .cost.mid{color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent)}
   .cost.hi{color:var(--neg);background:color-mix(in srgb,var(--neg) 12%,transparent)}
   td.ncell{font-family:var(--font-mono);font-size:12px;color:var(--muted-foreground)}
-  td.ncell.legacy{color:var(--warn)}
-  td.ncell.legacy::after{content:" ⚑";font-size:9px}
   .cov-badge{font-family:var(--font-mono);font-size:9.5px;font-weight:500;padding:2px 7px;
     border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);color:var(--warn);white-space:nowrap}
   .sub{color:var(--muted-foreground)}
@@ -346,7 +344,7 @@ const DOMAIN_LIST = buildDomainList();
 /* ── hero stats (computed, honest, data-driven) ── */
 function heroStats(){
   const leafIds = Object.keys(DOMAINS);
-  // active roster = models appearing at a leaf's *full* n (excludes legacy smaller-sample rows, e.g. Qwen n=30)
+  // active roster = distinct models across all leaves (full matrix, so every model counts)
   const active = new Set();
   const fullNs = [];
   leafIds.forEach(id => {
@@ -386,7 +384,6 @@ function orderedRows(leaf){
 function renderLeafTable(leaf, mount){
   const d = DOMAINS[leaf];
   const rows = orderedRows(leaf);
-  const maxN = Math.max(...d.models.map(m => m.n || 0));
   const s = leafSort[leaf];
   const rawLabel = (d.metric || "score").toUpperCase();
   const th = (col, label) => {
@@ -396,12 +393,10 @@ function renderLeafTable(leaf, mount){
   };
   const body = rows.map((r, i) => {
     const top = i === 0 && !s;
-    const legacy = r.n != null && r.n < maxN;
     const pct = k => isBlank(r[k]) ? `<span class="dash">—</span>` : `${(+r[k]).toFixed(1)}<span class="sub">%</span>`;
     const cost = isBlank(r.cost_per_1k_usd) ? `<span class="dash">—</span>`
       : `<span class="cost ${costCls(r.cost_per_1k_usd)}">$${(+r.cost_per_1k_usd).toFixed(2)}</span>`;
-    const nTd = r.n == null ? `<td><span class="dash">—</span></td>`
-      : `<td class="ncell ${legacy?"legacy":""}"${legacy?` title="legacy cached run — smaller sample (n=${r.n})"`:""}>${r.n}</td>`;
+    const nTd = r.n == null ? `<td><span class="dash">—</span></td>` : `<td class="ncell">${r.n}</td>`;
     const ci = Array.isArray(r.ci) ? `95% CI [${r.ci[0]}, ${r.ci[1]}]` : "";
     const lat = r.latency_s != null ? `${ci?" · ":""}${r.latency_s}s/q` : "";
     const tip = (ci + lat) ? ` title="${ci}${lat}"` : "";
@@ -511,7 +506,7 @@ function renderLeafMeta(leaf, mount, standalone){
       `<div class="legend">`+
         `<span><b>SCORE</b> normalized 0–100 (100 = flawless)</span>`+
         `<span><b>${(d.metric||"score").toUpperCase()}</b> raw benchmark metric</span>`+
-        `<span><b>n</b> questions scored (⚑ = legacy smaller sample)</span>`+
+        `<span><b>n</b> questions scored</span>`+
         `<span><b>$/1k</b> cost per 1,000 Q</span>`+
       `</div></div>`;
 }
