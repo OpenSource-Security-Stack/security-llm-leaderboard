@@ -430,32 +430,27 @@ function renderRollupTable(r, mount){
   const total = r.leaves.length;
   const body = r.models.map((m, i) => {
     const top = i === 0;
+    // coverage: inline "n/N benchmarks" badge next to the model name, only when partial
+    const [cov, tot] = m.coverage || [total, total];
+    const covBadge = cov < tot
+      ? ` <span class="cov-badge" title="score computed over the ${cov} of ${tot} benchmarks this model has run">${cov}/${tot} benchmarks</span>`
+      : "";
     const bestAt = m.best_at && m.best_at.length ? `<span class="bestat">best at ${m.best_at.map(esc).join(", ")}</span>` : "";
     const [lo, hi] = m.cost_per_1k_range || [];
     const costRange = lo == null ? `<span class="dash">—</span>`
       : (lo === hi ? `$${lo.toFixed(2)}` : `$${lo.toFixed(2)}<span class="sub">–</span>$${hi.toFixed(2)}`);
-    const [cov, tot] = m.coverage || [total, total];
-    const covBadge = cov < tot ? `<span class="cov-badge" title="score computed over the ${cov} of ${tot} benchmarks this model has run">${cov}/${tot} benchmarks</span>` : `<span class="dash">—</span>`;
     const score = m.score != null ? m.score : 0;
-    const wrPct = m.win_rate != null ? Math.round(m.win_rate * 100) : null;
-    const winTip = total > 1
-      ? `beats ${wrPct}% of competing models, averaged across ${total} benchmarks`
-      : `beats ${wrPct}% of competing models on this benchmark`;
-    const win = wrPct == null ? `<span class="dash">—</span>`
-      : `<span title="${winTip}">${wrPct}<span class="sub">%</span></span>`;
     return `<tr class="${top?"top":""}">`+
       `<td class="rank">${two(i+1)}</td>`+
-      `<td class="model">${esc(m.model)}${badge(m.type)}${bestAt}</td>`+
+      `<td class="model">${esc(m.model)}${badge(m.type)}${covBadge}${bestAt}</td>`+
       `<td><div class="barcell"><div class="track"><div class="fill" style="width:${Math.max(6,Math.round(score))}%"></div></div>`+
         `<span class="scoreval">${score.toFixed(1)}</span></div></td>`+
-      `<td class="rawcell">${win}</td>`+
-      `<td style="text-align:left">${covBadge}</td>`+
       `<td class="mono">${costRange}</td></tr>`;
   }).join("");
   mount.innerHTML =
     `<div class="tblwrap"><table><thead><tr>`+
     `<th class="l" style="width:52px">#</th><th class="l">Model</th>`+
-    `<th style="width:210px">score</th><th title="beats X% of rivals">win rate</th><th class="l">Coverage</th><th>$/1k&nbsp;Q range</th>`+
+    `<th style="width:220px">score</th><th>$/1k&nbsp;Q range</th>`+
     `</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
