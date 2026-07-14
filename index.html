@@ -110,7 +110,6 @@
     width:2px;background:var(--accent-data)}
   .pill:focus-visible{outline:1.5px solid var(--ring);outline-offset:-3px}
   .pill .idx{font-family:var(--font-mono);font-size:10px;color:var(--muted-foreground);opacity:.6}
-  .pill .lc{font-family:var(--font-mono);font-size:10px;color:var(--muted-foreground);opacity:.5}
 
   /* ─── section blocks ─── */
   .block{margin-top:26px;border:1px solid var(--grid-line)}
@@ -287,7 +286,7 @@ const ROLLUPS = R.rollups || {};
 
 /* ── UI-owned editorial (survives data refreshes; keyed by domain id, optional) ── */
 const NOTES = {
-  cti:      "Opus tops Threat Intelligence, winning two of its three leaves — but the leading open model stays close on the underlying scores at far lower cost.",
+  cti:      "Opus tops Threat Intelligence, winning two of its three benchmarks — but the leading open model stays close on the underlying scores at far lower cost.",
   vulnmgmt: "GPT-5.5 edges Vulnerability Management by winning CVSS scoring, with Opus taking CVE→CWE — the open challenger stays within a few points at a fraction of the price.",
   malware:  "Malware is the hardest task on the board — nobody clears 58, and several cheap open models land within a point of the closed frontier.",
   deteng:   "The closest call on the board — Opus edges GPT-5.5 by 0.002 (0.577 vs 0.575) at roughly a quarter of the cost and ~6× the speed. When quality ties, cost and latency decide the route.",
@@ -436,21 +435,23 @@ function renderRollupTable(r, mount){
       ? ` <span class="cov-badge" title="score computed over the ${cov} of ${tot} benchmarks this model has run">${cov}/${tot} benchmarks</span>`
       : "";
     const bestAt = m.best_at && m.best_at.length ? `<span class="bestat">best at ${m.best_at.map(esc).join(", ")}</span>` : "";
+    const avg = m.cost_per_1k_avg;
     const [lo, hi] = m.cost_per_1k_range || [];
-    const costRange = lo == null ? `<span class="dash">—</span>`
-      : (lo === hi ? `$${lo.toFixed(2)}` : `$${lo.toFixed(2)}<span class="sub">–</span>$${hi.toFixed(2)}`);
+    const rangeTip = (lo != null && hi != null && lo !== hi) ? ` title="ranges $${lo.toFixed(2)}–$${hi.toFixed(2)} across benchmarks"` : "";
+    const costCell = avg == null ? `<span class="dash">—</span>`
+      : `<span class="cost ${costCls(avg)}"${rangeTip}>$${avg.toFixed(2)}</span>`;
     const score = m.score != null ? m.score : 0;
     return `<tr class="${top?"top":""}">`+
       `<td class="rank">${two(i+1)}</td>`+
       `<td class="model">${esc(m.model)}${badge(m.type)}${covBadge}${bestAt}</td>`+
       `<td><div class="barcell"><div class="track"><div class="fill" style="width:${Math.max(6,Math.round(score))}%"></div></div>`+
         `<span class="scoreval">${score.toFixed(1)}</span></div></td>`+
-      `<td class="mono">${costRange}</td></tr>`;
+      `<td>${costCell}</td></tr>`;
   }).join("");
   mount.innerHTML =
     `<div class="tblwrap"><table><thead><tr>`+
     `<th class="l" style="width:52px">#</th><th class="l">Model</th>`+
-    `<th style="width:220px">score</th><th>$/1k&nbsp;Q range</th>`+
+    `<th style="width:220px">score</th><th>$/1k&nbsp;Q (avg)</th>`+
     `</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
@@ -509,12 +510,10 @@ function renderLeafMeta(leaf, mount, standalone){
 /* ── domain tabs ── */
 function renderPills(activeId){
   const p = document.getElementById("pills");
-  p.innerHTML = DOMAIN_LIST.map((dom, i) => {
-    const nl = dom.leaves.length;
-    const lc = `<span class="lc">${nl === 1 ? "1 leaf" : nl + " leaves"}</span>`;
-    return `<button class="pill" role="tab" data-id="${dom.id}" aria-selected="${dom.id===activeId}">`+
-      `<span class="idx">${two(i+1)}</span>${esc(dom.name)}${lc}</button>`;
-  }).join("");
+  p.innerHTML = DOMAIN_LIST.map((dom, i) =>
+    `<button class="pill" role="tab" data-id="${dom.id}" aria-selected="${dom.id===activeId}">`+
+      `<span class="idx">${two(i+1)}</span>${esc(dom.name)}</button>`
+  ).join("");
   p.querySelectorAll(".pill").forEach(b => b.addEventListener("click", () => {
     const id = b.getAttribute("data-id");
     renderPills(id); renderDomain(DOMAIN_LIST.find(x => x.id === id));
