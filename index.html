@@ -336,7 +336,7 @@ function toggleTheme(){
 }
 
 /* ── derive the domain tabs from each leaf's `domain` / `domain_name` fields ──
-   group leaves by `domain`, preserving first-seen order; a domain with a matching rollup shows it. */
+   group leaves by `domain`; tab order comes from the rollup's `order` field (falls back to data order). */
 function buildDomainList(){
   const order = [], groups = {};
   for (const [lid, d] of Object.entries(DOMAINS)){
@@ -344,7 +344,9 @@ function buildDomainList(){
     if (!groups[did]){ groups[did] = { id: did, name: d.domain_name || d.name, leaves: [] }; order.push(did); }
     groups[did].leaves.push(lid);
   }
-  return order.map(did => ({ ...groups[did], rollup: ROLLUPS[did] || null }));
+  const rank = did => { const r = ROLLUPS[did]; return (r && typeof r.order === "number") ? r.order : 100 + order.indexOf(did); };
+  return order.map(did => ({ ...groups[did], rollup: ROLLUPS[did] || null }))
+              .sort((a, b) => rank(a.id) - rank(b.id));
 }
 const DOMAIN_LIST = buildDomainList();
 
@@ -412,7 +414,7 @@ function renderLeafTable(leaf, mount){
     const norm = r.score_norm != null ? r.score_norm : (d.direction === "lower" ? 0 : r.score * 100);
     const cells = [
       `<td class="rank">${two(i+1)}</td>`,
-      `<td class="model">${esc(r.model)}${badge(r.type)}</td>`,
+      `<td class="model">${esc(r.model)}</td>`,
       `<td><div class="barcell"><div class="track"><div class="fill" style="width:${Math.max(6, Math.round(norm))}%"></div></div><span class="scoreval">${norm.toFixed(1)}</span></div></td>`,
     ];
     if (!collapse){
@@ -454,7 +456,7 @@ function renderRollupTable(r, mount){
     const score = m.score != null ? m.score : 0;
     return `<tr class="${top?"top":""}">`+
       `<td class="rank">${two(i+1)}</td>`+
-      `<td class="model">${esc(m.model)}${badge(m.type)}${covBadge}${bestAt}</td>`+
+      `<td class="model">${esc(m.model)}${covBadge}${bestAt}</td>`+
       `<td><div class="barcell"><div class="track"><div class="fill" style="width:${Math.max(6,Math.round(score))}%"></div></div>`+
         `<span class="scoreval">${score.toFixed(1)}</span></div></td>`+
       `<td>${rel}</td>`+
