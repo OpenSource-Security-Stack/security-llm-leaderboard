@@ -177,7 +177,7 @@
   .subtab:focus-visible{outline:1.5px solid var(--ring);outline-offset:-3px}
 
   /* ─── benchmarks & credits page ─── */
-  .credits-intro{margin:26px 0 18px;font-size:13px;color:var(--muted-foreground);max-width:74ch;line-height:1.6}
+  .credits-intro{margin:26px 0 18px;font-size:13px;color:var(--muted-foreground);line-height:1.6}
   .credits-table{width:100%;border-collapse:collapse;min-width:660px}
   .credits-table th{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.07em;
     color:var(--muted-foreground);font-weight:500;text-align:left;padding:11px 16px;
@@ -187,12 +187,11 @@
   .credits-table tbody tr:hover td{background:var(--card)}
   .cbench b{font-weight:500;display:block;letter-spacing:-.01em}
   .cbench .cfam{font-size:10.5px;color:var(--muted-foreground);font-family:var(--font-mono)}
-  .clic{font-family:var(--font-mono);font-size:11.5px} .clic.nc{color:var(--warn)}
   .cpaper{font-family:var(--font-mono);font-size:11.5px}
   .credits-table a.src{color:var(--accent-data);border-bottom:1px solid color-mix(in srgb,var(--accent-data) 40%,transparent);white-space:nowrap}
   .credits-table a.src:hover{border-bottom-color:var(--accent-data)}
   .credits-table .ext{font-size:9px;opacity:.7}
-  .credits-note{margin:22px 2px 0;font-size:11px;color:var(--muted-foreground);line-height:1.7;max-width:80ch}
+  .credits-note{margin:22px 0 0;font-size:11px;color:var(--muted-foreground);line-height:1.7}
 
   .hidden{display:none}
   footer{max-width:1160px;margin:0 auto;padding:26px 24px;border-top:1px solid var(--border);
@@ -536,7 +535,7 @@ function renderPills(activeId){
     `<tr>`+
       `<td class="cbench"><b>${esc(r.name)}</b><span class="cfam">${esc(r.family)}</span></td>`+
       `<td>${r.sources.map(s => link(s.label, s.url)).join("<br>")}</td>`+
-      `<td class="clic ${r.nc?"nc":""}">${esc(r.license)}</td>`+
+      `<td>${esc(r.license)}</td>`+
       `<td class="cpaper">${r.paper ? link(r.paper.replace(/^https?:\/\//,""), r.paper) : `<span class="dash">—</span>`}</td>`+
     `</tr>`).join("");
   document.getElementById("credits").innerHTML =
@@ -544,7 +543,7 @@ function renderPills(activeId){
     `<th>Benchmark</th><th>Source</th><th>License</th><th>Paper</th>`+
     `</tr></thead><tbody>${rows}</tbody></table></div></div>`;
   document.getElementById("credits-note").innerHTML =
-    "Benchmark data © original authors — see links above. <b>CTIBench is CC&nbsp;BY-NC-SA (non-commercial use)</b>; "+
+    "Benchmark data © original authors — see links above. CTIBench is CC&nbsp;BY-NC-SA (non-commercial use); "+
     "the Sigma rule corpus is SigmaHQ under Detection Rule License 1.1 (task construction ours). "+
     "Displaying these credits is a license obligation, not a courtesy.";
 })();
