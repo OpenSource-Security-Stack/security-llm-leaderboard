@@ -64,6 +64,11 @@
     place-items:center;font-size:14px;transition:background .15s,border-color .15s}
   .theme:hover{border-color:var(--ring)}
   .theme:focus-visible{outline:1.5px solid var(--ring);outline-offset:2px}
+  .actions{display:flex;align-items:center;gap:8px}
+  .ghlink{width:34px;height:34px;border:1px solid var(--border);background:var(--card);
+    color:var(--muted-foreground);display:grid;place-items:center;transition:color .15s,border-color .15s}
+  .ghlink:hover{color:var(--foreground);border-color:var(--ring)}
+  .ghlink:focus-visible{outline:1.5px solid var(--ring);outline-offset:2px}
 
   .wrap{max-width:1160px;margin:0 auto;padding:0 24px 96px}
 
@@ -85,12 +90,11 @@
   h1.title em{font-style:normal;color:var(--muted-foreground)}
   .hero-desc{margin:16px 0 0;color:var(--muted-foreground);font-size:14px;max-width:44ch;line-height:1.55}
 
-  /* stat cells — hairline grid */
-  .stats{display:grid;grid-template-columns:1fr 1fr}
+  /* stat cells — hairline stack */
+  .stats{display:grid;grid-template-columns:1fr}
   .stat-cell{padding:20px 22px;border-bottom:1px solid var(--grid-line);
-    border-right:1px solid var(--grid-line);display:flex;flex-direction:column;gap:2px;position:relative}
-  .stats .stat-cell:nth-child(2n){border-right:0}
-  .stats .stat-cell:nth-last-child(-n+2){border-bottom:0}
+    display:flex;flex-direction:column;gap:2px;position:relative}
+  .stats .stat-cell:last-child{border-bottom:0}
   .stat-idx{position:absolute;top:12px;right:14px;font-size:10px;color:var(--muted-foreground);
     opacity:.55;letter-spacing:.06em}
   .stat-cell b{font-weight:500;font-size:26px;line-height:1;letter-spacing:-.02em;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
@@ -130,9 +134,9 @@
     font-weight:500;text-align:right;padding:11px 16px;border-bottom:1px solid var(--grid-line);
     white-space:nowrap;font-family:var(--font-mono);user-select:none}
   thead th.l{text-align:left}
-  thead th.sortable{cursor:pointer;transition:color .15s}
+  thead th.sortable{cursor:pointer;transition:color .15s;position:relative}
   thead th.sortable:hover{color:var(--foreground)}
-  thead th .arrow{opacity:0;margin-left:3px}
+  thead th .arrow{position:absolute;right:5px;top:50%;transform:translateY(-50%);opacity:0}
   thead th[aria-sort] .arrow{opacity:1;color:var(--accent-data)}
   tbody td{padding:13px 16px;border-bottom:1px solid var(--grid-line);text-align:right;font-size:13px}
   tbody tr:last-child td{border-bottom:0}
@@ -154,10 +158,6 @@
   tr.top .fill{background:var(--accent-data)}
   .scoreval{width:52px;text-align:right;font-weight:500;font-family:var(--font-mono);font-size:12.5px}
   td.rawcell{font-family:var(--font-mono);font-size:12px;color:var(--muted-foreground)}
-  .cost{font-family:var(--font-mono);font-weight:500;padding:2px 8px;font-size:12px;border:1px solid transparent}
-  .cost.lo{color:var(--pos);background:color-mix(in srgb,var(--pos) 11%,transparent)}
-  .cost.mid{color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent)}
-  .cost.hi{color:var(--neg);background:color-mix(in srgb,var(--neg) 12%,transparent)}
   td.ncell{font-family:var(--font-mono);font-size:12px;color:var(--muted-foreground)}
   .cov-badge{font-family:var(--font-mono);font-size:9.5px;font-weight:500;padding:2px 7px;
     border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);color:var(--warn);white-space:nowrap}
@@ -177,21 +177,21 @@
   .subtab:focus-visible{outline:1.5px solid var(--ring);outline-offset:-3px}
 
   /* ─── benchmarks & credits page ─── */
-  .credits-intro{margin:26px 0 0;font-size:13px;color:var(--muted-foreground);max-width:74ch;line-height:1.6}
-  .credits-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
-    border-top:1px solid var(--grid-line);border-left:1px solid var(--grid-line);margin-top:20px}
-  .cred{border-right:1px solid var(--grid-line);border-bottom:1px solid var(--grid-line);padding:20px 22px}
-  .cred h3{margin:0 0 3px;font-size:15px;font-weight:500;letter-spacing:-.015em}
-  .cred .powers{font-size:11px;color:var(--muted-foreground);margin:0 0 14px;line-height:1.5}
-  .cred .row{display:flex;gap:8px;align-items:baseline;padding:5px 0;border-top:1px solid var(--grid-line);font-size:12px}
-  .cred .row:first-of-type{border-top:0}
-  .cred .row .k{font-family:var(--font-mono);font-size:10px;color:var(--muted-foreground);
-    text-transform:uppercase;letter-spacing:.05em;width:64px;flex:none}
-  .cred a.src{color:var(--accent-data);border-bottom:1px solid color-mix(in srgb,var(--accent-data) 40%,transparent)}
-  .cred a.src:hover{border-bottom-color:var(--accent-data)}
-  .cred .lic{font-family:var(--font-mono);font-size:11px}
-  .cred .lic.nc{color:var(--warn)}
-  .cred .ext{font-size:9px;opacity:.7}
+  .credits-intro{margin:26px 0 18px;font-size:13px;color:var(--muted-foreground);max-width:74ch;line-height:1.6}
+  .credits-table{width:100%;border-collapse:collapse;min-width:660px}
+  .credits-table th{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.07em;
+    color:var(--muted-foreground);font-weight:500;text-align:left;padding:11px 16px;
+    border-bottom:1px solid var(--grid-line);white-space:nowrap}
+  .credits-table td{padding:14px 16px;border-bottom:1px solid var(--grid-line);font-size:13px;vertical-align:top;text-align:left}
+  .credits-table tbody tr:last-child td{border-bottom:0}
+  .credits-table tbody tr:hover td{background:var(--card)}
+  .cbench b{font-weight:500;display:block;letter-spacing:-.01em}
+  .cbench .cfam{font-size:10.5px;color:var(--muted-foreground);font-family:var(--font-mono)}
+  .clic{font-family:var(--font-mono);font-size:11.5px} .clic.nc{color:var(--warn)}
+  .cpaper{font-family:var(--font-mono);font-size:11.5px}
+  .credits-table a.src{color:var(--accent-data);border-bottom:1px solid color-mix(in srgb,var(--accent-data) 40%,transparent);white-space:nowrap}
+  .credits-table a.src:hover{border-bottom-color:var(--accent-data)}
+  .credits-table .ext{font-size:9px;opacity:.7}
   .credits-note{margin:22px 2px 0;font-size:11px;color:var(--muted-foreground);line-height:1.7;max-width:80ch}
 
   .hidden{display:none}
@@ -218,7 +218,10 @@
       <button class="tab" role="tab" id="t-cred" aria-selected="false" onclick="setView('cred')">Benchmarks &amp; Credits</button>
     </nav>
     <span class="spacer"></span>
-    <button class="theme" id="theme" onclick="toggleTheme()" aria-label="Toggle color theme" title="Toggle theme">◐</button>
+    <div class="actions">
+      <a class="ghlink" href="https://github.com/OpenSource-Security-Stack/security-llm-eval-harness" target="_blank" rel="noopener noreferrer" aria-label="Source on GitHub" title="Source: security-llm-eval-harness on GitHub"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <button class="theme" id="theme" onclick="toggleTheme()" aria-label="Toggle color theme" title="Toggle theme">◐</button>
+    </div>
   </div>
 </header>
 
@@ -226,8 +229,8 @@
   <section class="hero">
     <div class="hero-l">
       <p class="eyebrow mono"><span class="live-dot"></span><span id="hero-eyebrow"></span></p>
-      <h1 class="title">The best model per security task — <em>measured, not assumed.</em></h1>
-      <p class="hero-desc">Every ranking below is a real benchmark run. Route each security sub-task to the model that empirically wins it — not the one you assume is best.</p>
+      <h1 class="title">The best model for security — <em>by domain and task.</em></h1>
+      <p class="hero-desc">Every model is rated against publicly available security benchmarks — so the right model can be chosen for every task.</p>
     </div>
     <div class="stats" id="stats"></div>
   </section>
@@ -235,23 +238,20 @@
   <section id="view-board">
     <div class="pills" id="pills" role="tablist" aria-label="Domains"></div>
     <div id="domain-body"></div>
-    <p class="note" id="board-note"></p>
   </section>
 
   <section id="view-cred" class="hidden">
     <p class="credits-intro">These rankings are computed on public, verified-open benchmarks.
       Benchmark data belongs to its original authors — the sources and licenses below are our
       attribution obligations, not decoration. Please honor each dataset's license.</p>
-    <div class="credits-grid" id="credits"></div>
+    <div id="credits"></div>
     <p class="credits-note" id="credits-note"></p>
   </section>
 </div>
 
 <footer>
-  <span>Scores are normalized per benchmark (100 = flawless); not comparable across benchmarks.</span>
   <span class="spacer"></span>
-  <span class="mono" id="foot-meta"></span>
-  <span>· Open-core LLM security evals</span>
+  <span>Security LLM Evals</span>
 </footer>
 
 <script src="data/rankings.js"></script>
@@ -284,14 +284,6 @@ const R = /** @type {any} */(window).RANKINGS;
 const DOMAINS = R.domains;
 const ROLLUPS = R.rollups || {};
 
-/* ── UI-owned editorial (survives data refreshes; keyed by domain id, optional) ── */
-const NOTES = {
-  cti:      "Opus tops Threat Intelligence, winning two of its three benchmarks — but the leading open model stays close on the underlying scores at far lower cost.",
-  vulnmgmt: "GPT-5.5 edges Vulnerability Management by winning CVSS scoring, with Opus taking CVE→CWE — the open challenger stays within a few points at a fraction of the price.",
-  malware:  "Malware is the hardest task on the board — nobody clears 58, and several cheap open models land within a point of the closed frontier.",
-  deteng:   "The closest call on the board — Opus edges GPT-5.5 by 0.002 (0.577 vs 0.575) at roughly a quarter of the cost and ~6× the speed. When quality ties, cost and latency decide the route.",
-};
-
 /* ── static attribution (Benchmarks & Credits page — from docs/CONTRACT.md) ── */
 const LEAF_NAMES = {
   cti:"Threat-Intel Reasoning", cti_mcq:"CTI Knowledge (MCQ)", cti_ate:"ATT&CK Technique Extraction",
@@ -318,7 +310,6 @@ const CREDITS = [
 /* ── helpers ── */
 const isBlank = v => v == null || v === 0;
 const two = i => String(i).padStart(2, "0");
-const costCls = c => c < 10 ? "lo" : c < 50 ? "mid" : "hi";
 const esc = s => String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const badge = t => `<span class="badge ${t}">${t === "mixture" ? "vote" : t}</span>`;
 const RELIABILITY_TIP = "% of questions with a usable answer — the rest score zero. Low reliability = the model failed to produce gradeable output (truncation, rambling, errors), not that it was wrong.";
@@ -369,13 +360,11 @@ function heroStats(){
 (function renderHero(){
   const s = heroStats();
   document.getElementById("stats").innerHTML = [
-    [s.models, "models"], [s.domains, "domains"], [s.benchmarks, "benchmarks"], [s.nRange, "questions / task"]
+    [s.models, "models"], [s.domains, "domains"], [s.benchmarks, "benchmarks"]
   ].map(([b, l], i) => `<div class="stat-cell"><span class="stat-idx mono">${two(i+1)}</span>`+
     `<b>${b}</b><span class="lbl">${l}</span></div>`).join("");
   document.getElementById("hero-eyebrow").textContent =
     `${s.benchmarks} benchmarks · ${s.domains} security domains · live`;
-  document.getElementById("foot-meta").textContent =
-    `${s.benchmarks} benchmarks · ${s.domains} domains · N=${s.nRange}`;
 })();
 
 /* ── leaf model table (direction-aware) ── */
@@ -399,13 +388,13 @@ function renderLeafTable(leaf, mount){
   const th = (col, label, title) => {
     const active = s && s.col === col;
     return `<th class="sortable" data-leaf="${leaf}" data-col="${col}"${title?` title="${title}"`:""}${active?` aria-sort="${s.dir===-1?"descending":"ascending"}"`:""}>`+
-      `${label} <span class="arrow">${active ? (s.dir===-1?"▾":"▴") : "▾"}</span></th>`;
+      `${label}<span class="arrow">${active ? (s.dir===-1?"▾":"▴") : "▾"}</span></th>`;
   };
   const body = rows.map((r, i) => {
     const top = i === 0 && !s;
-    const pct = k => isBlank(r[k]) ? `<span class="dash">—</span>` : `${(+r[k]).toFixed(1)}<span class="sub">%</span>`;
+    const pct = k => isBlank(r[k]) ? `<span class="dash">—</span>` : `<span class="mono">${(+r[k]).toFixed(1)}<span class="sub">%</span></span>`;
     const cost = isBlank(r.cost_per_1k_usd) ? `<span class="dash">—</span>`
-      : `<span class="cost ${costCls(r.cost_per_1k_usd)}" title="${COST_TIP}">$${(+r.cost_per_1k_usd).toFixed(2)}</span>`;
+      : `<span class="mono" title="${COST_TIP}">$${(+r.cost_per_1k_usd).toFixed(2)}</span>`;
     const nTd = r.n == null ? `<td><span class="dash">—</span></td>` : `<td class="ncell">${r.n}</td>`;
     const ci = Array.isArray(r.ci) ? `95% CI [${r.ci[0]}, ${r.ci[1]}]` : "";
     const lat = r.latency_s != null ? `${ci?" · ":""}${r.latency_s}s/q` : "";
@@ -451,8 +440,8 @@ function renderRollupTable(r, mount){
     const [lo, hi] = m.cost_per_1k_range || [];
     const costTip = avg == null ? "" : ` title="average cost per 1,000 questions across the domain's benchmarks${(lo!=null&&hi!=null&&lo!==hi)?`; range: $${lo.toFixed(2)}–$${hi.toFixed(2)}`:""}"`;
     const costCell = avg == null ? `<span class="dash">—</span>`
-      : `<span class="cost ${costCls(avg)}"${costTip}>$${avg.toFixed(2)}</span>`;
-    const rel = m.answered_pct_avg != null ? `${m.answered_pct_avg.toFixed(1)}<span class="sub">%</span>` : `<span class="dash">—</span>`;
+      : `<span class="mono"${costTip}>$${avg.toFixed(2)}</span>`;
+    const rel = m.answered_pct_avg != null ? `<span class="mono">${m.answered_pct_avg.toFixed(1)}<span class="sub">%</span></span>` : `<span class="dash">—</span>`;
     const score = m.score != null ? m.score : 0;
     return `<tr class="${top?"top":""}">`+
       `<td class="rank">${two(i+1)}</td>`+
@@ -476,8 +465,6 @@ const subState = {}; // domainId -> active leaf id
 function renderDomain(dom){
   curDomain = dom.id;
   const host = document.getElementById("domain-body");
-  const note = NOTES[dom.id] || "";
-  document.getElementById("board-note").textContent = note ? "▸ " + note : "";
 
   if (dom.rollup){
     // verdict on top (overarching) + receipts below (leaf sub-tabs) — identical for all domains
@@ -536,21 +523,26 @@ function renderPills(activeId){
   }));
 }
 
-/* ── benchmarks & credits page ── */
+/* ── benchmarks & credits page — one row per benchmark leaf (all 7) ── */
 (function renderCredits(){
-  const g = document.getElementById("credits");
-  g.innerHTML = CREDITS.map(c => {
-    const powers = c.leaves.map(l => LEAF_NAMES[l] || l).join(" · ");
-    const rows = [];
-    rows.push(`<div class="row"><span class="k">Powers</span><span>${esc(powers)}</span></div>`);
-    c.sources.forEach((s, i) => rows.push(
-      `<div class="row"><span class="k">${i===0?"Source":""}</span>`+
-      `<a class="src" href="${s.url}" target="_blank" rel="noopener noreferrer">${esc(s.label)} <span class="ext">↗</span></a></div>`));
-    rows.push(`<div class="row"><span class="k">License</span><span class="lic ${c.nc?"nc":""}">${esc(c.license)}</span></div>`);
-    if (c.paper) rows.push(`<div class="row"><span class="k">Paper</span><a class="src" href="${c.paper}" target="_blank" rel="noopener noreferrer">${esc(c.paper.replace(/^https?:\/\//,""))} <span class="ext">↗</span></a></div>`);
-    if (c.hint) rows.push(`<div class="row"><span class="k"></span><span style="color:var(--muted-foreground)">${esc(c.hint)}</span></div>`);
-    return `<div class="cred"><h3>${esc(c.name)}</h3><p class="powers">${esc(powers)}</p>${rows.join("")}</div>`;
-  }).join("");
+  const link = (label, url) => `<a class="src" href="${url}" target="_blank" rel="noopener noreferrer">${esc(label)} <span class="ext">↗</span></a>`;
+  // flatten the family-grouped CREDITS into one row per leaf
+  const byLeaf = [];
+  CREDITS.forEach(c => c.leaves.forEach(leaf => byLeaf.push({
+    name: LEAF_NAMES[leaf] || leaf, family: c.name,
+    sources: c.sources, license: c.license, nc: c.nc, paper: c.paper
+  })));
+  const rows = byLeaf.map(r =>
+    `<tr>`+
+      `<td class="cbench"><b>${esc(r.name)}</b><span class="cfam">${esc(r.family)}</span></td>`+
+      `<td>${r.sources.map(s => link(s.label, s.url)).join("<br>")}</td>`+
+      `<td class="clic ${r.nc?"nc":""}">${esc(r.license)}</td>`+
+      `<td class="cpaper">${r.paper ? link(r.paper.replace(/^https?:\/\//,""), r.paper) : `<span class="dash">—</span>`}</td>`+
+    `</tr>`).join("");
+  document.getElementById("credits").innerHTML =
+    `<div class="block"><div class="tblwrap"><table class="credits-table"><thead><tr>`+
+    `<th>Benchmark</th><th>Source</th><th>License</th><th>Paper</th>`+
+    `</tr></thead><tbody>${rows}</tbody></table></div></div>`;
   document.getElementById("credits-note").innerHTML =
     "Benchmark data © original authors — see links above. <b>CTIBench is CC&nbsp;BY-NC-SA (non-commercial use)</b>; "+
     "the Sigma rule corpus is SigmaHQ under Detection Rule License 1.1 (task construction ours). "+
