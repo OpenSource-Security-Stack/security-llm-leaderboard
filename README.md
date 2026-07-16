@@ -1,41 +1,50 @@
 # security-llm-leaderboard
 
-A public leaderboard evaluating which LLM is best at each security task, measured on real
-benchmarks. A static site with **no logic and no secrets**: it renders a `rankings.json`
-produced by [security-llm-eval-harness](../security-llm-eval-harness).
+The public leaderboard for **Security LLM Evals** — which LLM is best at each security task,
+measured on publicly available benchmarks across accuracy, cost, and reliability. Live at
+[secllmleaderboard.dev](https://secllmleaderboard.dev).
 
-Live domains: **Threat-Intel Reasoning** and **Malware Analysis** (CyberSOCEval). The **Coverage
-map** view shows all 19 security domains, their target benchmarks, and status.
+A fully static site with **no build step, no dependencies, and no secrets**: one HTML file
+rendering the `rankings.json` produced by
+[security-llm-eval-harness](https://github.com/OpenSource-Security-Stack/security-llm-eval-harness).
 
-## Run it locally
+Currently: **4 domains, 7 benchmarks, 6 models** — threat intelligence, malware analysis,
+detection engineering, and vulnerability management.
 
-It's a single static page. Because it loads `data/rankings.js` via a `<script>` tag, it works
-straight from disk:
+## Setup
 
 ```bash
-open index.html            # macOS — or just double-click
-# or serve it:
-python3 -m http.server 8000   # then visit http://localhost:8000
+git clone https://github.com/OpenSource-Security-Stack/security-llm-leaderboard.git
+cd security-llm-leaderboard
+
+open index.html                  # works straight from disk — or serve it:
+python3 -m http.server 8000      # http://localhost:8000
 ```
 
-## Updating the data
-
-Data lives in `data/rankings.js` (`window.RANKINGS`, conforming to the harness's
-`spec/results.schema.json`). To refresh from new eval runs:
+To refresh the data from new eval runs:
 
 ```bash
 # in the harness repo:
-python3 scripts/export_rankings.py
+python3 scripts/export.py
 cp rankings.js ../security-llm-leaderboard/data/rankings.js
 ```
 
-The site never contains model outputs, keys, or private scoring — only the published rankings.
+Deploys on any static host (GitHub Pages, Vercel, Netlify) — no configuration needed.
 
-## Deploy
+## Contributing
 
-Any static host (GitHub Pages, Vercel, Netlify). It's fully self-contained: one HTML file + one
-data file, no build step, no external requests.
+The site is intentionally simple: `index.html` (markup, styles, rendering) + `data/rankings.js`
+(the data). UI improvements are welcome as PRs. Two rules:
+
+- **Data comes only from the harness** — never hand-edit `data/rankings.js`; scores, models,
+  and benchmarks change upstream.
+- **No external requests** — the site stays self-contained (no CDNs, no analytics, no fonts).
+
+For new benchmarks or models, contribute to the
+[eval harness](https://github.com/OpenSource-Security-Stack/security-llm-eval-harness) instead —
+the leaderboard picks them up automatically from the data.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE). Benchmark data belongs to its original authors — see the
+Benchmarks & Credits page on the site.
