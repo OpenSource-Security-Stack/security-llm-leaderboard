@@ -441,12 +441,16 @@ function renderRollupTable(r, mount){
     const costCell = avg == null ? `<span class="dash">—</span>`
       : `<span class="mono"${costTip}>$${avg.toFixed(2)}</span>`;
     const rel = m.answered_pct_avg != null ? `<span class="mono">${m.answered_pct_avg.toFixed(1)}<span class="sub">%</span></span>` : `<span class="dash">—</span>`;
+    const partial = cov < tot;   // a domain average over fewer benchmarks isn't comparable → dash, no bar
     const score = m.score != null ? m.score : 0;
+    const scoreTd = partial
+      ? `<td><span class="dash">—</span></td>`
+      : `<td><div class="barcell"><div class="track"><div class="fill" style="width:${Math.max(6,Math.round(score))}%"></div></div>`+
+        `<span class="scoreval">${score.toFixed(1)}</span></div></td>`;
     return `<tr class="${top?"top":""}">`+
       `<td class="rank">${two(i+1)}</td>`+
       `<td class="model">${esc(m.model)}${covBadge}${bestAt}</td>`+
-      `<td><div class="barcell"><div class="track"><div class="fill" style="width:${Math.max(6,Math.round(score))}%"></div></div>`+
-        `<span class="scoreval">${score.toFixed(1)}</span></div></td>`+
+      scoreTd+
       `<td>${rel}</td>`+
       `<td>${costCell}</td></tr>`;
   }).join("");
